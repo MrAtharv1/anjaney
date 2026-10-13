@@ -1,0 +1,26 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: no-commit-to-branch
+        args: ['--branch', 'main']
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.4
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  # STRICT DATA PRIVACY HOOK: Rejects accidental commits of participant data
+  - repo: local
+    hooks:
+      - id: reject-protected-data
+        name: Data Privacy Guard (AGENTS.md Rule 1)
+        entry: bash -c 'for f in "$@"; do if [[ "$f" =~ ^data/(raw|interim|processed)/ ]]; then echo "ERROR: EULA Violation. Committing data under $f is strictly prohibited."; exit 1; fi; done' --
+        language: system
+        types: [file]

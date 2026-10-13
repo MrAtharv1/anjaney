@@ -1,0 +1,36 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+
+# Environments
+.venv/
+venv/
+ENV/
+env/
+
+# Data Privacy - STRICTLY NEVER COMMIT RAW/PROCESSED PARTICIPANT DATA
+data/raw/
+data/interim/
+data/processed/
+*.parquet
+!data/synthetic/**
+
+# Experiments raw outputs
+experiments/**/*.parquet
+
+# Environment credentials & keys
+.env
+.env.local
+
+# Web and Node
+node_modules/
+.next/
+dist/
+coverage/
+
+# OS artifacts
+.DS_Store
+Thumbs.db

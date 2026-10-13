@@ -1,0 +1,19 @@
+paths:
+  data_raw: "data/raw"
+  data_interim: "data/interim"
+  data_processed: "data/processed"
+  data_synthetic: "data/synthetic"
+  experiments: "experiments"
+
+seeds:
+  global_seed: 42
+  split_seed: 1337
+  permutation_seed: 2026
+
+screening:
+  window_size: 5
+  warmup_windows: 3
+  embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
+  phq8_threshold: 10
+  alpha: 0.10
+  target_abstention: 0.15
