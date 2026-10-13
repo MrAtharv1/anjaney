@@ -4,11 +4,13 @@ import hashlib
 from pathlib import Path
 from typing import Annotated
 
+import pandas as pd
 import typer
 
 from anjaney.data.daic_loader import DAICLoader
 from anjaney.data.inspector import run_inspection
 from anjaney.data.synthetic import SyntheticCohortGenerator
+from anjaney.features.registry import FeatureRegistry
 from anjaney.preprocess.clean import clean_session
 from anjaney.preprocess.splits import build_splits, save_splits_json
 from anjaney.preprocess.windows import WindowBuilder
@@ -133,8 +135,48 @@ def features_default():
 
 
 @features_app.command("build")
-def features_build():
-    typer.echo("Features build command: not implemented yet.")
+def features_build(
+    windows_file: Annotated[
+        str, typer.Option(help="Path to windows parquet")
+    ] = "data/processed/windows.parquet",
+    output_file: Annotated[
+        str, typer.Option(help="Output path for features parquet")
+    ] = "data/processed/features.parquet",
+    groups: Annotated[str, typer.Option(help="Comma-separated feature groups")] = (
+        "text_embed,timing,lexical"
+    ),
+    model: Annotated[
+        str, typer.Option(help="SentenceTransformer model name")
+    ] = "sentence-transformers/all-MiniLM-L6-v2",
+):
+    try:
+        in_path = Path(windows_file)
+        if not in_path.exists():
+            raise FileNotFoundError(
+                f"Input windows file not found at {in_path}. Run 'anjaney data build' first."
+            )
+
+        selected_groups = [g.strip() for g in groups.split(",")]
+        typer.echo(f"Loading windows from {in_path}...")
+        df_windows = pd.read_parquet(in_path)
+
+        typer.echo(
+            f"Extracting feature groups {selected_groups} with model='{model}' on {len(df_windows)} windows..."
+        )
+        registry = FeatureRegistry(embedding_model=model)
+        df_features = registry.extract_features(df_windows, groups=selected_groups)
+
+        out_path = Path(output_file)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        df_features.to_parquet(out_path, index=False)
+
+        col_map = FeatureRegistry.get_feature_columns(df_features, groups=selected_groups)
+        typer.echo(f"Features saved successfully to {out_path}")
+        for grp, cols in col_map.items():
+            typer.echo(f" - Group '{grp}': {len(cols)} columns")
+    except Exception as e:
+        typer.secho(f"Error building features: {e}", fg=typer.colors.RED)
+        raise typer.Exit(code=1) from e
 
 
 @train_app.callback()
