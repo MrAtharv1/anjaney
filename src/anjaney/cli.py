@@ -1,6 +1,12 @@
 """Typer CLI interface for ANJANEY research pipeline."""
 
+from pathlib import Path
+from typing import Annotated
+
 import typer
+
+from anjaney.data.inspector import run_inspection
+from anjaney.data.synthetic import SyntheticCohortGenerator
 
 app = typer.Typer(
     name="anjaney",
@@ -31,8 +37,39 @@ def data_default():
 
 
 @data_app.command("inspect")
-def data_inspect():
-    typer.echo("Data inspect command: not implemented yet.")
+def data_inspect(
+    source: Annotated[str, typer.Option(help="Data source: 'synthetic' or 'daic'")] = "synthetic",
+    daic_root: Annotated[
+        str | None, typer.Option(help="Path to DAIC directory (or env DAIC_ROOT)")
+    ] = None,
+    output: Annotated[str, typer.Option(help="Output path for inspection report")] = (
+        "docs/dataset_schema_report.md"
+    ),
+):
+    try:
+        typer.echo(f"Running dataset integrity inspection on '{source}'...")
+        _, report_md = run_inspection(source=source, daic_root=daic_root)
+        out_path = Path(output)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(out_path, "w", encoding="utf-8") as f:
+            f.write(report_md)
+        typer.echo(f"Inspection report generated successfully at {out_path}")
+    except Exception as e:
+        typer.secho(f"Error inspecting dataset: {e}", fg=typer.colors.RED)
+        raise typer.Exit(code=1) from e
+
+
+@data_app.command("generate-synthetic")
+def data_generate_synthetic(
+    n_participants: Annotated[int, typer.Option(help="Number of participants")] = 50,
+    output_dir: Annotated[str, typer.Option(help="Target directory for synthetic data")] = (
+        "data/synthetic"
+    ),
+):
+    typer.echo(f"Generating {n_participants} synthetic participant sessions...")
+    gen = SyntheticCohortGenerator(n_participants=n_participants)
+    out_path = gen.export_to_directory(output_dir)
+    typer.echo(f"Synthetic cohort exported to {out_path}")
 
 
 @features_app.callback()
