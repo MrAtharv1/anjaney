@@ -101,12 +101,21 @@ def export_model_bundle(
     # Generate 20 test parity fixtures for WebWorker client verification
     fixtures: list[dict[str, Any]] = []
     for i in range(min(20, len(x_matrix))):
-        xi = x_scaled[i]
-        pt_pred = float(ridge.predict(xi.reshape(1, -1))[0])
+        raw_vec = [float(v) for v in x_matrix[i].tolist()]
+        # Compute exact point score using the bundle's parameters
+        scaled_vec = np.array(
+            [
+                (raw_vec[j] - scaler.mean_[j])
+                / (scaler.scale_[j] if scaler.scale_[j] != 0.0 else 1.0)
+                for j in range(len(raw_vec))
+            ]
+        )
+        pt_pred = float(ridge.intercept_ + np.dot(scaled_vec, ridge.coef_))
+
         fixtures.append(
             {
                 "fixture_id": f"fixture_{i:02d}",
-                "input_vector": [round(float(v), 5) for v in x_matrix[i, :16]],
+                "input_vector": raw_vec,
                 "expected_point_score": round(pt_pred, 4),
                 "expected_lower": round(pt_pred - q_hat, 4),
                 "expected_upper": round(pt_pred + q_hat, 4),
