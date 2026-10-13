@@ -1,6 +1,7 @@
 """Data contracts for transcripts, participant sessions, and dataset diagnostics."""
 
 from enum import StrEnum
+
 from pydantic import BaseModel, Field, model_validator
 
 
