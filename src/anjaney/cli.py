@@ -7,6 +7,7 @@ from typing import Annotated
 import pandas as pd
 import typer
 
+from anjaney.baseline.rq1_runner import run_rq1_analysis
 from anjaney.data.daic_loader import DAICLoader
 from anjaney.data.inspector import run_inspection
 from anjaney.data.synthetic import SyntheticCohortGenerator
@@ -253,8 +254,54 @@ def rq1_default():
 
 
 @rq1_app.command("run")
-def rq1_run():
-    typer.echo("RQ1 gating test: not implemented yet.")
+def rq1_run(
+    features_file: Annotated[
+        str, typer.Option(help="Path to features parquet")
+    ] = "data/processed/features.parquet",
+    prereg_file: Annotated[
+        str, typer.Option(help="Path to committed prereg.yaml")
+    ] = "configs/prereg.yaml",
+    output_dir: Annotated[str, typer.Option(help="Experiment folder")] = "experiments/rq1",
+    seed: Annotated[int, typer.Option(help="Random seed")] = 42,
+):
+    try:
+        typer.echo(f"Validating pre-registration lock at '{prereg_file}'...")
+        res = run_rq1_analysis(
+            features_path=features_file,
+            prereg_path=prereg_file,
+            output_dir=output_dir,
+            seed=seed,
+        )
+
+        stats = res["statistics"]
+        typer.echo("\n=======================================================")
+        typer.echo(f"  ANJANEY RQ1 GATING TEST DECISION: {res['status']}")
+        typer.echo("=======================================================")
+        typer.echo(f"Git Hash: {res['git_hash']}")
+        typer.echo(f"Prereg Hash: {res['prereg_hash'][:12]}")
+        typer.echo(f"Observed Group Difference: {stats['observed_group_difference']:.4f}")
+        typer.echo(
+            f"Bootstrap 95% CI: [{stats['bootstrap_ci_95'][0]:.4f}, {stats['bootstrap_ci_95'][1]:.4f}]"
+        )
+        typer.echo(f"Cohen's d: {stats['cohens_d']:.3f}")
+        typer.echo(f"Permutation p-value: {stats['permutation_p_value']:.4f}")
+        typer.echo(f"Artifacts saved to: {res['run_dir']}\n")
+
+        if res["status"] == "SUPPORTED":
+            typer.secho(
+                "RQ1 Supported: High-risk drift exceeds population position expectations.",
+                fg=typer.colors.GREEN,
+                bold=True,
+            )
+        elif res["status"] == "FALSIFIED":
+            typer.secho(
+                "RQ1 Falsified: Drift is explained by generic fatigue. Baseline will be evaluated as negative result.",
+                fg=typer.colors.YELLOW,
+                bold=True,
+            )
+    except Exception as e:
+        typer.secho(f"RQ1 Execution Halted: {e}", fg=typer.colors.RED)
+        raise typer.Exit(code=1) from e
 
 
 @conformal_app.callback()

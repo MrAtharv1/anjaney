@@ -79,7 +79,7 @@ class DAICLoader:
                 columns=["participant_id", "phq8_score", "phq8_binary", "gender", "official_split"]
             )
 
-        merged = pd.concat(records, ignore_errors=True)
+        merged = pd.concat(records, ignore_index=True)
         return merged
 
     def load_session(self, participant_id: str, label_row: dict[str, Any] | None = None) -> Session:

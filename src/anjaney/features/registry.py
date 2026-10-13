@@ -20,7 +20,7 @@ class FeatureRegistry:
         df_windows: pd.DataFrame,
         groups: list[str] | None = None,
     ) -> pd.DataFrame:
-        """Extract requested feature families and return a combined feature DataFrame."""
+        """Extract requested feature families and return a concatenated feature DataFrame."""
         selected_groups = groups or self.FEATURE_GROUPS
         for g in selected_groups:
             if g not in self.FEATURE_GROUPS:
@@ -28,15 +28,16 @@ class FeatureRegistry:
                     f"Unknown feature group '{g}'. Supported groups: {self.FEATURE_GROUPS}"
                 )
 
-        df_out = df_windows.copy()
+        chunks: list[pd.DataFrame] = [df_windows.copy()]
 
         # 1. Text Embeddings
         if "text_embed" in selected_groups:
             texts = df_windows["text"].tolist()
             emb_matrix = self.text_extractor.encode_batch(texts)
             dim = emb_matrix.shape[1]
-            for col_idx in range(dim):
-                df_out[f"embed_{col_idx}"] = emb_matrix[:, col_idx]
+            cols = [f"embed_{col_idx}" for col_idx in range(dim)]
+            df_emb = pd.DataFrame(emb_matrix, columns=cols, index=df_windows.index)
+            chunks.append(df_emb)
 
         # 2. Timing Features
         if "timing" in selected_groups:
@@ -44,9 +45,8 @@ class FeatureRegistry:
                 self.timing_extractor.extract_window_features(row)
                 for row in df_windows.to_dict(orient="records")
             ]
-            df_timing = pd.DataFrame(timing_rows)
-            for col in df_timing.columns:
-                df_out[col] = df_timing[col].values
+            df_timing = pd.DataFrame(timing_rows, index=df_windows.index)
+            chunks.append(df_timing)
 
         # 3. Lexical Features
         if "lexical" in selected_groups:
@@ -54,17 +54,15 @@ class FeatureRegistry:
                 self.lexical_extractor.extract_features(text)
                 for text in df_windows["text"].tolist()
             ]
-            df_lexical = pd.DataFrame(lexical_rows)
-            for col in df_lexical.columns:
-                df_out[col] = df_lexical[col].values
+            df_lexical = pd.DataFrame(lexical_rows, index=df_windows.index)
+            chunks.append(df_lexical)
 
-        return df_out
+        return pd.concat(chunks, axis=1)
 
     @classmethod
     def get_feature_columns(
         cls, df: pd.DataFrame, groups: list[str] | None = None
     ) -> dict[str, list[str]]:
-        """Return the column names associated with each feature group."""
         selected_groups = groups or cls.FEATURE_GROUPS
         col_map: dict[str, list[str]] = {}
 

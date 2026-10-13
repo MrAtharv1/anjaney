@@ -1,0 +1,14 @@
+{
+  "modalities": [
+    "text_only",
+    "timing_only",
+    "lexical_only",
+    "text_plus_timing"
+  ],
+  "heads": [
+    "dummy",
+    "ridge",
+    "elasticnet",
+    "lightgbm"
+  ]
+}

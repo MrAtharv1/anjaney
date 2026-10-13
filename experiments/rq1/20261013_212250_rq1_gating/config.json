@@ -1,0 +1,22 @@
+{
+  "study_title": "ANJANEY: Campus Mental-Health Screening Aid Gating Test",
+  "hypotheses": {
+    "rq1": "Within-session check-in drift differs significantly between high-risk (PHQ-8 >= 10) and low-risk participants after position conditioning.",
+    "rq3": "Adding personal-baseline deviation signals improves selective risk and conformal interval efficiency over population-only fusion."
+  },
+  "analysis_parameters": {
+    "primary_metric_rq1": "participant_level_late_session_conditioned_drift",
+    "risk_split_threshold": 10.0,
+    "warmup_windows_k": 3,
+    "empirical_bayes_k": 2.0,
+    "alpha": 0.1,
+    "n_permutations": 10000,
+    "n_bootstrap": 2000,
+    "minimum_effect_size_d": 0.3
+  },
+  "decision_rules": {
+    "supported": "Permutation p < 0.05 AND bootstrap 95% CI excludes 0 AND |Cohen's d| >= 0.30",
+    "falsified": "Bootstrap 95% CI includes 0 (drift is generic task fatigue)",
+    "inconclusive": "Permutation p < 0.05 but effect size |d| < 0.30 or CI marginally touches 0"
+  }
+}

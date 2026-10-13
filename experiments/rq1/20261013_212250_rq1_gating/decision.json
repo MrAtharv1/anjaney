@@ -1,0 +1,20 @@
+{
+  "status": "SUPPORTED",
+  "prereg_hash": "40f5f89c0cdd031800930bc996a02e1f396e16854fbb12cff155e197b63d3179",
+  "git_hash": "b097689d042174bf8d8f8f301f57b70397045dd7-dirty",
+  "statistics": {
+    "mean_high_risk_drift": 0.026160295625606175,
+    "mean_low_risk_drift": -0.1265923115737497,
+    "observed_group_difference": 0.15275260719935588,
+    "bootstrap_ci_95": [
+      0.032194892130404586,
+      0.2873341009764319
+    ],
+    "cohens_d": 0.6128166796741582,
+    "permutation_p_value": 0.0474,
+    "mixed_effects": {
+      "interaction_coef": -0.1370944257887441,
+      "interaction_p": 0.8210165170580812
+    }
+  }
+}

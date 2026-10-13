@@ -1,25 +1,19 @@
-"""Window-to-participant feature aggregation with in-fold dimensionality reduction."""
+"""Window-to-participant feature aggregation with in-fold scaled dimensionality reduction."""
 
 import numpy as np
 import pandas as pd
 from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 
 
 class ParticipantAggregator:
-    """Aggregates window-level features to participant-level vectors with in-fold PCA."""
-
     def __init__(self, feature_cols: list[str], n_pca_components: int | None = None):
         self.feature_cols = feature_cols
         self.n_pca_components = n_pca_components
+        self.scaler: StandardScaler | None = None
         self.pca: PCA | None = None
 
     def aggregate(self, df_windows: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
-        """Aggregate window features by participant into (X_df, y_score, y_binary).
-
-        Statistical Assumption:
-            Window sequence order is summarized via first-moment (mean),
-            second-moment (std), and temporal gradient (late - early).
-        """
         records: list[dict] = []
         pids: list[str] = []
         scores: list[float] = []
@@ -35,7 +29,6 @@ class ParticipantAggregator:
             mean_feats = np.mean(feat_vals, axis=0)
             std_feats = np.std(feat_vals, axis=0) if len(group) > 1 else np.zeros_like(mean_feats)
 
-            # Late-session vs early-session drift
             early_mask = group["rel_position"] < 0.5
             late_mask = group["rel_position"] >= 0.5
 
@@ -63,10 +56,21 @@ class ParticipantAggregator:
     def fit_transform_fold(
         self, X_train: pd.DataFrame, X_val: pd.DataFrame
     ) -> tuple[np.ndarray, np.ndarray]:
-        """Fit PCA strictly inside the training fold and transform validation fold."""
-        if self.n_pca_components is not None and self.n_pca_components < X_train.shape[1]:
-            self.pca = PCA(n_components=self.n_pca_components, random_state=42)
-            X_tr_trans = self.pca.fit_transform(X_train.values)
-            X_val_trans = self.pca.transform(X_val.values)
-            return X_tr_trans, X_val_trans
-        return X_train.values, X_val.values
+        """Fit scaler and PCA inside the training fold and transform validation fold."""
+        self.scaler = StandardScaler()
+        X_tr_scaled = self.scaler.fit_transform(X_train.values)
+        X_val_scaled = self.scaler.transform(X_val.values)
+
+        if self.n_pca_components is not None:
+            max_components = min(
+                self.n_pca_components,
+                X_tr_scaled.shape[0] - 1,
+                X_tr_scaled.shape[1],
+            )
+            if max_components >= 2:
+                self.pca = PCA(n_components=max_components, random_state=42)
+                X_tr_trans = self.pca.fit_transform(X_tr_scaled)
+                X_val_trans = self.pca.transform(X_val_scaled)
+                return X_tr_trans, X_val_trans
+
+        return X_tr_scaled, X_val_scaled
