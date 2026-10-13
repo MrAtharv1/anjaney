@@ -11,6 +11,7 @@ from anjaney.data.daic_loader import DAICLoader
 from anjaney.data.inspector import run_inspection
 from anjaney.data.synthetic import SyntheticCohortGenerator
 from anjaney.features.registry import FeatureRegistry
+from anjaney.models.baseline_runner import run_baseline_evaluation
 from anjaney.preprocess.clean import clean_session
 from anjaney.preprocess.splits import build_splits, save_splits_json
 from anjaney.preprocess.windows import WindowBuilder
@@ -185,8 +186,65 @@ def train_default():
 
 
 @train_app.command("baseline")
-def train_baseline():
-    typer.echo("Train baseline command: not implemented yet.")
+def train_baseline(
+    features_file: Annotated[
+        str, typer.Option(help="Path to features parquet")
+    ] = "data/processed/features.parquet",
+    splits_file: Annotated[
+        str, typer.Option(help="Path to splits json")
+    ] = "data/processed/splits.json",
+    output_dir: Annotated[str, typer.Option(help="Experiment directory")] = "experiments",
+    seed: Annotated[int, typer.Option(help="Evaluation seed")] = 42,
+):
+    try:
+        typer.echo("Starting population baseline training across participant folds...")
+        result = run_baseline_evaluation(
+            features_path=features_file,
+            splits_path=splits_file,
+            output_dir=output_dir,
+            seed=seed,
+        )
+
+        typer.echo(f"Baseline run successfully logged to {result['run_dir']}\n")
+        typer.echo("| Modality | Head | RMSE [95% CI] | AUROC [95% CI] |")
+        typer.echo("| :--- | :--- | :--- | :--- |")
+
+        summary = result["summary"]
+        for mod, heads in summary.items():
+            if mod == "permutation_test":
+                continue
+            for h_name, metrics in heads.items():
+                rmse_str = f"{metrics['rmse']['point']:.2f} [{metrics['rmse']['ci_lower']:.2f}, {metrics['rmse']['ci_upper']:.2f}]"
+                auroc_str = f"{metrics['auroc']['point']:.2f} [{metrics['auroc']['ci_lower']:.2f}, {metrics['auroc']['ci_upper']:.2f}]"
+                typer.echo(f"| {mod} | {h_name} | {rmse_str} | {auroc_str} |")
+
+        # Sanity alarms
+        perm = summary.get("permutation_test", {})
+        typer.echo(f"\nPermutation Test AUROC: {perm.get('shuffled_auroc', 0.5):.2f}")
+        if not result["permutation_passed"]:
+            typer.secho(
+                "ALARM: Permutation test AUROC deviated significantly from 0.50! Audit fold isolation.",
+                fg=typer.colors.RED,
+                bold=True,
+            )
+        else:
+            typer.secho(
+                "Permutation check PASSED (chance-level behavior on shuffled labels).",
+                fg=typer.colors.GREEN,
+            )
+
+        text_ridge_auroc = (
+            summary.get("text_only", {}).get("ridge", {}).get("auroc", {}).get("point", 0.0)
+        )
+        if text_ridge_auroc > 0.85:
+            typer.secho(
+                "WARNING (LEAKAGE AUDIT): Participant text AUROC > 0.85 on cross-validation. Real DAIC text rarely exceeds 0.80. Inspect for shortcut features.",
+                fg=typer.colors.YELLOW,
+                bold=True,
+            )
+    except Exception as e:
+        typer.secho(f"Error executing baseline evaluation: {e}", fg=typer.colors.RED)
+        raise typer.Exit(code=1) from e
 
 
 @rq1_app.callback()
