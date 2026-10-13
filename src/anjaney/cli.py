@@ -8,6 +8,7 @@ import pandas as pd
 import typer
 
 from anjaney.baseline.rq1_runner import run_rq1_analysis
+from anjaney.conformal.conformal_runner import run_conformal_pipeline
 from anjaney.data.daic_loader import DAICLoader
 from anjaney.data.inspector import run_inspection
 from anjaney.data.synthetic import SyntheticCohortGenerator
@@ -310,8 +311,54 @@ def conformal_default():
 
 
 @conformal_app.command("run")
-def conformal_run():
-    typer.echo("Conformal evaluation: not implemented yet.")
+def conformal_run(
+    features_file: Annotated[
+        str, typer.Option(help="Path to features parquet")
+    ] = "data/processed/features.parquet",
+    splits_file: Annotated[
+        str, typer.Option(help="Path to splits json")
+    ] = "data/processed/splits.json",
+    output_dir: Annotated[str, typer.Option(help="Target experiment directory")] = (
+        "experiments/conformal"
+    ),
+    alpha: Annotated[float, typer.Option(help="Target error rate alpha")] = 0.10,
+    seed: Annotated[int, typer.Option(help="Random seed")] = 42,
+):
+    try:
+        typer.echo(f"Starting split-conformal calibration (alpha={alpha}, seed={seed})...")
+        res = run_conformal_pipeline(
+            features_path=features_file,
+            splits_path=splits_file,
+            output_dir=output_dir,
+            alpha=alpha,
+            seed=seed,
+        )
+
+        typer.echo("\n=======================================================")
+        typer.echo(f"  CONFORMAL CALIBRATION SUMMARY (Target Coverage: {1.0 - alpha:.0%})")
+        typer.echo("=======================================================")
+        typer.echo(f"Calibration Participants: {res['n_calib_participants']}")
+        typer.echo(
+            f"Split Conformal Interval: +/-{res['split_conformal']['q_hat']:.2f} points (Coverage: {res['split_conformal']['coverage']:.1%})"
+        )
+        typer.echo(
+            f"CQR Mean Width: {res['cqr']['mean_width']:.2f} (Coverage: {res['cqr']['coverage']:.1%})"
+        )
+        typer.echo(
+            f"Difficulty-Normalized Width: {res['difficulty_normalized']['mean_width']:.2f} (Coverage: {res['difficulty_normalized']['coverage']:.1%})"
+        )
+        typer.echo(
+            f"Classification Set Abstentions: {res['conformal_classification']['abstention_rate_both_labels']:.1%}"
+        )
+        typer.echo(f"Risk-Coverage AURC: {res['operating_point_sweep']['aurc']:.3f}")
+        opt = res["operating_point_sweep"]["optimal_operating_point"]
+        typer.echo(
+            f"Optimal Policy: Max Width={opt['max_width']} | Margin={opt['margin']} -> Abstain={opt['abstention_rate']:.1%}, Risk={opt['selective_risk']:.1%}"
+        )
+        typer.echo(f"\nArtifacts saved to: {res['run_dir']}")
+    except Exception as e:
+        typer.secho(f"Conformal Calibration Failed: {e}", fg=typer.colors.RED)
+        raise typer.Exit(code=1) from e
 
 
 @eval_app.callback()

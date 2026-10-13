@@ -1,0 +1,56 @@
+{
+  "alpha": 0.1,
+  "n_fit_participants": 26,
+  "n_calib_participants": 14,
+  "split_conformal": {
+    "q_hat": 10.5487367404854,
+    "mean_interval_width": 21.097473480970798,
+    "coverage": 1.0
+  },
+  "cqr": {
+    "mean_width": 22.65358711422981,
+    "coverage": 1.0
+  },
+  "difficulty_normalized": {
+    "mean_width": 166.00336103264152,
+    "coverage": 1.0
+  },
+  "conformal_classification": {
+    "abstention_rate_both_labels": 0.0,
+    "coverage": 1.0
+  },
+  "mapie_parity": {
+    "custom_q": 10.556902419739426,
+    "mapie_half_width": 10.556902419739426,
+    "discrepancy": 0.0
+  },
+  "operating_point_sweep": {
+    "aurc": 0.0,
+    "optimal_operating_point": {
+      "max_width": 4.0,
+      "margin": 0.0,
+      "abstention_rate": 1.0,
+      "coverage": 0.0,
+      "selective_risk": 0.0,
+      "expected_cost": 0.5
+    }
+  },
+  "validity_study": {
+    "nominal_0.95": {
+      "empirical_coverage": 1.0,
+      "mean_width": Infinity
+    },
+    "nominal_0.90": {
+      "empirical_coverage": 1.0,
+      "mean_width": 21.097473480970798
+    },
+    "nominal_0.80": {
+      "empirical_coverage": 0.8571428571428571,
+      "mean_width": 19.839193407578527
+    },
+    "nominal_0.70": {
+      "empirical_coverage": 0.7857142857142857,
+      "mean_width": 18.3081891423746
+    }
+  }
+}
