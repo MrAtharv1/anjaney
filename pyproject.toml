@@ -65,6 +65,7 @@ select = ["E", "F", "I", "W", "UP"]
 ignore = ["E501"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
-pythonpath = ["src"]
+testpaths = ["tests", "apps/api/tests"]
+pythonpath = ["src", "apps/api/src"]
 addopts = "-v --strict-markers"
+asyncio_mode = "auto"
