@@ -69,3 +69,6 @@ testpaths = ["tests", "apps/api/tests"]
 pythonpath = ["src", "apps/api/src"]
 addopts = "-v --strict-markers"
 asyncio_mode = "auto"
+markers = [
+    "slow: marks statistical Monte Carlo simulation tests (run with make validate)",
+]

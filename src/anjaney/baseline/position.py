@@ -1,11 +1,12 @@
-"""Hierarchical, vectorized script-phase and position conditioner with fail-closed phase verification."""
+"""Hierarchical, vectorized script-phase and position conditioner with participant-level cross-fitting."""
 
 import numpy as np
 import pandas as pd
+from sklearn.model_selection import GroupKFold
 
 
 class PositionConditioner:
-    """Removes expected interviewer script-phase and progression drift fitted strictly on training data.
+    """Removes expected interviewer script-phase and progression drift.
 
     Conditioning Hierarchy:
         1. Joint cell: (prompt_phase, rel_position_bin) if cell count >= min_bin_count
@@ -48,6 +49,10 @@ class PositionConditioner:
         if "prompt_phase" in df.columns:
             phase_vals = pd.to_numeric(df["prompt_phase"], errors="coerce").to_numpy(dtype=float)
             valid_phase = np.isfinite(phase_vals)
+            if self.require_prompt_phase and not np.any(valid_phase):
+                raise RuntimeError(
+                    "Confound guard: 'prompt_phase' column contains no valid phase mappings."
+                )
             valid_pos_mask = valid_pos_mask & valid_phase
             turn_bins = np.where(valid_phase, phase_vals, -1).astype(int)
             if fit_turn_edges:
@@ -91,7 +96,11 @@ class PositionConditioner:
         self.global_mean = float(np.mean(valid_devs))
 
         df_work = pd.DataFrame(
-            {"dev": valid_devs, "pos_b": pos_bins[valid_mask], "turn_b": turn_bins[valid_mask]}
+            {
+                "dev": valid_devs,
+                "pos_b": pos_bins[valid_mask],
+                "turn_b": turn_bins[valid_mask],
+            }
         )
 
         joint_stats = df_work.groupby(["turn_b", "pos_b"])["dev"].agg(["count", "mean"])
@@ -140,3 +149,39 @@ class PositionConditioner:
 
     def fit_transform(self, df_windows: pd.DataFrame, deviation_col: str) -> np.ndarray:
         return self.fit(df_windows, deviation_col).transform(df_windows, deviation_col)
+
+    def cross_fit_transform(
+        self,
+        df_windows: pd.DataFrame,
+        deviation_col: str,
+        n_folds: int = 5,
+    ) -> np.ndarray:
+        """Cross-fit by participant_id so each participant's bin means exclude their own windows."""
+        if "participant_id" not in df_windows.columns:
+            raise ValueError("cross_fit_transform requires 'participant_id' column.")
+
+        unique_pids = df_windows["participant_id"].unique()
+        if len(unique_pids) < n_folds:
+            return self.fit_transform(df_windows, deviation_col)
+
+        gkf = GroupKFold(n_splits=n_folds)
+        groups = df_windows["participant_id"].to_numpy()
+        out_conditioned = np.full(len(df_windows), np.nan, dtype=float)
+
+        for tr_idx, val_idx in gkf.split(df_windows, groups=groups):
+            fold_cond = PositionConditioner(
+                n_bins=self.n_bins,
+                n_turn_bins=self.n_turn_bins,
+                min_bin_count=self.min_bin_count,
+                require_prompt_phase=self.require_prompt_phase,
+            )
+            tr_df = df_windows.iloc[tr_idx]
+            val_df = df_windows.iloc[val_idx]
+            fold_cond.fit(tr_df, deviation_col)
+            out_conditioned[val_idx] = fold_cond.transform(val_df, deviation_col)
+            self.conditioning_mode = fold_cond.conditioning_mode
+
+        # Also fit full object for inspection/attributes
+        self.fit(df_windows, deviation_col)
+        self.conditioning_mode = f"{self.conditioning_mode}_cross_fit_{n_folds}fold"
+        return out_conditioned

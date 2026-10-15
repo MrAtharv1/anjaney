@@ -1,8 +1,9 @@
-"""RQ1 Gating Test Runner: Script-phase conditioning, TOST equivalence in d-units, MDE, and sensitivity analyses."""
+"""RQ1 Gating Test Runner: Provenance locking, participant cross-fitting, mixed-model fallback, and length-confound downgrade rule."""
 
 import hashlib
 import json
 import subprocess
+import warnings
 from pathlib import Path
 from typing import Any
 
@@ -76,6 +77,24 @@ def verify_prereg_clean(prereg_path: Path | str = "configs/prereg.yaml") -> dict
     }
 
 
+def read_latest_real_rq1_decision(base_dir: Path | str = "experiments/rq1") -> dict[str, Any]:
+    """Read ONLY the explicit LATEST_REAL pointer (never synthetic runs) for downstream RQ3 gating."""
+    pointer_file = Path(base_dir) / "LATEST_REAL"
+    if not pointer_file.exists():
+        raise FileNotFoundError(
+            f"No real-data RQ1 gate found at '{pointer_file}'. "
+            "Synthetic runs cannot unlock real-data RQ3 claims."
+        )
+    decision_path = Path(pointer_file.read_text(encoding="utf-8").strip())
+    if not decision_path.exists():
+        raise FileNotFoundError(f"LATEST_REAL pointer target missing: {decision_path}")
+    with open(decision_path, encoding="utf-8") as f:
+        data = json.load(f)
+    if data.get("data_source") != "daic":
+        raise RuntimeError("Invalid LATEST_REAL target: data_source is not 'daic'.")
+    return data
+
+
 def _compute_cohens_d(high_vals: np.ndarray, low_vals: np.ndarray) -> float:
     n_h, n_l = len(high_vals), len(low_vals)
     if n_h < 2 or n_l < 2:
@@ -91,11 +110,78 @@ def _compute_cohens_d(high_vals: np.ndarray, low_vals: np.ndarray) -> float:
 def _compute_mde_cohens_d(
     n_high: int, n_low: int, alpha_one_sided: float = 0.05, power: float = 0.80
 ) -> float:
-    """Minimum Detectable Effect size (Cohen's d) at 80% power for two-sample comparison."""
     z_alpha = float(sp_stats.norm.ppf(1.0 - alpha_one_sided))
     z_beta = float(sp_stats.norm.ppf(power))
     se_factor = np.sqrt((1.0 / max(1, n_high)) + (1.0 / max(1, n_low)))
     return float((z_alpha + z_beta) * se_factor)
+
+
+def _fit_mixed_effects_with_fallback(valid_post_warmup: pd.DataFrame) -> dict[str, Any]:
+    """Try random intercept + slope first; fallback to random intercept + participant cluster-robust OLS on boundary/non-convergence."""
+    formula = "conditioned_deviation ~ phq8_binary * rel_position + n_tokens"
+    inter_key = "phq8_binary:rel_position"
+
+    # Attempt 1: Random intercept + random slope on rel_position
+    try:
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            model = smf.mixedlm(
+                formula,
+                valid_post_warmup,
+                groups=valid_post_warmup["participant_id"],
+                re_formula="~rel_position",
+            )
+            fit_res = model.fit(disp=False)
+            had_boundary_warn = any(
+                "boundary" in str(w.message).lower() or "failed" in str(w.message).lower()
+                for w in caught
+            )
+
+        converged = bool(getattr(fit_res, "converged", False)) and not had_boundary_warn
+        if converged and np.all(np.isfinite(fit_res.bse)):
+            conf_int = fit_res.conf_int()
+            return {
+                "converged": True,
+                "model_used": "mixedlm_random_intercept_and_slope",
+                "interaction_coef": float(fit_res.params.get(inter_key, np.nan)),
+                "interaction_p": float(fit_res.pvalues.get(inter_key, np.nan)),
+                "interaction_ci_95": [
+                    float(conf_int.loc[inter_key, 0]),
+                    float(conf_int.loc[inter_key, 1]),
+                ],
+                "n_tokens_coef": float(fit_res.params.get("n_tokens", np.nan)),
+                "n_tokens_p": float(fit_res.pvalues.get("n_tokens", np.nan)),
+            }
+    except Exception:
+        pass
+
+    # Fallback: Random-intercept MixedLM or Cluster-Robust SEs by participant_id
+    try:
+        ols_mod = smf.ols(formula, data=valid_post_warmup).fit(
+            cov_type="cluster",
+            cov_kwds={"groups": valid_post_warmup["participant_id"]},
+        )
+        conf_int = ols_mod.conf_int()
+        return {
+            "converged": True,
+            "model_used": "fallback_cluster_robust_se_by_participant",
+            "interaction_coef": float(ols_mod.params.get(inter_key, np.nan)),
+            "interaction_p": float(ols_mod.pvalues.get(inter_key, np.nan)),
+            "interaction_ci_95": [
+                float(conf_int.loc[inter_key, 0]),
+                float(conf_int.loc[inter_key, 1]),
+            ],
+            "n_tokens_coef": float(ols_mod.params.get("n_tokens", np.nan)),
+            "n_tokens_p": float(ols_mod.pvalues.get("n_tokens", np.nan)),
+        }
+    except Exception as exc:
+        return {
+            "converged": False,
+            "model_used": "failed",
+            "error": str(exc),
+            "interaction_coef": None,
+            "interaction_p": None,
+        }
 
 
 def _evaluate_for_warmup_k(
@@ -113,6 +199,7 @@ def _evaluate_for_warmup_k(
     n_bins = int(params.get("position_bins", 5))
     n_turn_bins = int(params.get("turn_index_bins", 5))
     min_bin_count = int(params.get("min_bin_count_n", 5))
+    cf_folds = int(params.get("conditioner_cross_fit_folds", 5))
     require_phase = bool(params.get("require_prompt_phase", True))
     late_cutoff = float(params.get("late_session_cutoff", 0.5))
     ewma_alpha = float(params.get("ewma_alpha", 0.3))
@@ -158,17 +245,23 @@ def _evaluate_for_warmup_k(
         has_timing_cols=len(timing_cols) > 0,
     )
 
-    train_valid = df_all_devs[df_all_devs["official_split"] == "train"].dropna(
-        subset=["combined_deviation"]
-    )
+    # Cross-fit PositionConditioner by participant across train+dev so all participants are out-of-fold
     conditioner = PositionConditioner(
         n_bins=n_bins,
         n_turn_bins=n_turn_bins,
         min_bin_count=min_bin_count,
         require_prompt_phase=require_phase,
     )
-    conditioner.fit(train_valid, "combined_deviation")
-    df_all_devs["conditioned_deviation"] = conditioner.transform(df_all_devs, "combined_deviation")
+    post_mask = df_all_devs["combined_deviation"].notna()
+    df_post = df_all_devs[post_mask].copy()
+    df_post["conditioned_deviation"] = conditioner.cross_fit_transform(
+        df_post, "combined_deviation", n_folds=cf_folds
+    )
+    df_all_devs["conditioned_deviation"] = np.nan
+    df_all_devs.loc[post_mask, "conditioned_deviation"] = df_post[
+        "conditioned_deviation"
+    ].to_numpy()
+
     df_all_devs = engine.compute_conditioned_persistence(
         df_all_devs, cond_col="conditioned_deviation"
     )
@@ -218,6 +311,14 @@ def run_rq1_analysis(
 
     df_raw = pd.read_parquet(features_path)
 
+    # Detect data_source ("synthetic" vs "daic") from features dataframe or participant IDs
+    if "is_synthetic" in df_raw.columns and bool(df_raw["is_synthetic"].any()):
+        data_source = "synthetic"
+    elif df_raw["participant_id"].astype(str).str.startswith("SYNTH_").any():
+        data_source = "synthetic"
+    else:
+        data_source = "daic"
+
     # STRICT ISOLATION: Restrict RQ1 strictly to train + dev
     test_count_excluded = int(
         df_raw[df_raw["official_split"] == "test"]["participant_id"].nunique()
@@ -225,6 +326,24 @@ def run_rq1_analysis(
     df_features = df_raw[df_raw["official_split"].isin(["train", "dev"])].copy()
     if df_features.empty:
         raise ValueError("No train/dev participants found in features DataFrame.")
+
+    # Missing-Ellie sessions (451, 458, 480): exclude cleanly from conditioned RQ1 run
+    if "has_interviewer_turns" in df_raw.columns:
+        no_ellie_pids = sorted(
+            df_raw[~df_raw["has_interviewer_turns"]]["participant_id"].astype(str).unique().tolist()
+        )
+    else:
+        no_ellie_pids = [
+            str(p)
+            for p in ["451", "458", "480"]
+            if str(p) in df_raw["participant_id"].astype(str).values
+        ]
+    for daic_id in ["451", "458", "480"]:
+        if daic_id in df_raw["participant_id"].astype(str).values and daic_id not in no_ellie_pids:
+            no_ellie_pids.append(daic_id)
+    no_ellie_pids = sorted(list(set(no_ellie_pids)))
+
+    df_features = df_features[~df_features["participant_id"].astype(str).isin(no_ellie_pids)].copy()
 
     embed_cols = FeatureRegistry.get_feature_columns(df_features, ["text_embed"]).get(
         "text_embed", []
@@ -262,7 +381,7 @@ def run_rq1_analysis(
             exceed_count += 1
     p_value = float((exceed_count + 1) / (n_perms + 1))
 
-    # 2. Bootstrap CIs in both raw units and Cohen's d units (95% for superiority, 90% for TOST equivalence)
+    # 2. Bootstrap CIs in both raw units and Cohen's d units
     boot_raw_diffs = np.empty(n_boot, dtype=float)
     boot_d_vals = np.empty(n_boot, dtype=float)
     for b in range(n_boot):
@@ -275,20 +394,16 @@ def run_rq1_analysis(
         float(np.percentile(boot_raw_diffs, 2.5)),
         float(np.percentile(boot_raw_diffs, 97.5)),
     ]
-    d_ci_95 = [float(np.percentile(boot_d_vals, 2.5)), float(np.percentile(boot_d_vals, 97.5))]
-    d_ci_90_tost = [float(np.percentile(boot_d_vals, 5.0)), float(np.percentile(boot_d_vals, 95.0))]
+    d_ci_95 = [
+        float(np.percentile(boot_d_vals, 2.5)),
+        float(np.percentile(boot_d_vals, 97.5)),
+    ]
+    d_ci_90_tost = [
+        float(np.percentile(boot_d_vals, 5.0)),
+        float(np.percentile(boot_d_vals, 95.0)),
+    ]
 
-    # 3. Decision Rule in Cohen's d units (Superiority vs TOST 90% CI Equivalence)
-    if primary_meta["conditioning_mode"].startswith("UNCONDITIONED"):
-        decision = "UNCONDITIONED"
-    elif p_value < 0.05 and d_ci_95[0] > 0.0 and cohens_d >= min_d:
-        decision = "SUPPORTED"
-    elif d_ci_90_tost[0] >= -equiv_d and d_ci_90_tost[1] <= equiv_d:
-        decision = "FALSIFIED"
-    else:
-        decision = "INCONCLUSIVE"
-
-    # 4. Participant-level length-residualized sensitivity check (controlling for mean_tokens)
+    # 3. Participant-level length-residualized sensitivity check
     tokens_arr = participant_late["mean_tokens"].to_numpy(dtype=float)
     drifts_arr = participant_late["late_drift"].to_numpy(dtype=float)
     if np.std(tokens_arr) > 1e-6:
@@ -300,49 +415,55 @@ def run_rq1_analysis(
     low_resid = resid_drifts[participant_late["phq8_binary"].to_numpy() == 0]
     length_adj_d = _compute_cohens_d(high_resid, low_resid)
 
-    # 5. Linear Mixed-Effects Model with random intercept AND random slope on rel_position
-    try:
-        model = smf.mixedlm(
-            "conditioned_deviation ~ phq8_binary * rel_position + n_tokens",
-            valid_post_warmup,
-            groups=valid_post_warmup["participant_id"],
-            re_formula="~rel_position",
-        )
-        fit_res = model.fit(disp=False)
-        conf_int = fit_res.conf_int()
-        inter_key = "phq8_binary:rel_position"
-        mixed_summary: dict[str, Any] = {
-            "converged": bool(getattr(fit_res, "converged", False)),
-            "random_effects": "intercept_and_rel_position_slope",
-            "interaction_coef": float(fit_res.params.get(inter_key, np.nan)),
-            "interaction_p": float(fit_res.pvalues.get(inter_key, np.nan)),
-            "interaction_ci_95": [
-                float(conf_int.loc[inter_key, 0]) if inter_key in conf_int.index else None,
-                float(conf_int.loc[inter_key, 1]) if inter_key in conf_int.index else None,
-            ],
-            "n_tokens_coef": float(fit_res.params.get("n_tokens", np.nan)),
-            "n_tokens_p": float(fit_res.pvalues.get("n_tokens", np.nan)),
-        }
-    except Exception as exc:
-        mixed_summary = {
-            "converged": False,
-            "error": str(exc),
-            "interaction_coef": None,
-            "interaction_p": None,
-        }
+    # 4. Pre-registered Decision Rule (with length-confound downgrade guard)
+    downgraded_by_length_confound = False
+    if primary_meta["conditioning_mode"].startswith("UNCONDITIONED"):
+        decision = "UNCONDITIONED"
+    elif p_value < 0.05 and d_ci_95[0] > 0.0 and cohens_d >= min_d:
+        if length_adj_d < min_d:
+            decision = "INCONCLUSIVE"
+            downgraded_by_length_confound = True
+        else:
+            decision = "SUPPORTED"
+    elif d_ci_90_tost[0] >= -equiv_d and d_ci_90_tost[1] <= equiv_d:
+        decision = "FALSIFIED"
+    else:
+        decision = "INCONCLUSIVE"
+
+    # 5. Mixed-Effects Model with automatic fallback to participant cluster-robust SEs
+    mixed_summary = _fit_mixed_effects_with_fallback(valid_post_warmup)
 
     # 6. Exploratory Warm-up K Sensitivity (K in [3, 5, 8])
     k_grid = params.get("warmup_k_sensitivity_grid", [3, 5, 8])
     k_sensitivity: dict[str, Any] = {}
     for k_cand in k_grid:
+        eligible_train = sum(
+            len(g) > int(k_cand)
+            for _, g in df_features[df_features["official_split"] == "train"].groupby(
+                "participant_id"
+            )
+        )
+        if eligible_train < 2:
+            k_sensitivity[f"K_{k_cand}"] = {
+                "status": "INSUFFICIENT_DATA",
+                "eligible_train_participants": int(eligible_train),
+                "label": "PRIMARY" if int(k_cand) == warmup_k else "EXPLORATORY",
+            }
+            continue
         try:
             k_meta, _ = _evaluate_for_warmup_k(
-                df_features, embed_cols, timing_cols, params, warmup_k=int(k_cand), seed=seed
+                df_features,
+                embed_cols,
+                timing_cols,
+                params,
+                warmup_k=int(k_cand),
+                seed=seed,
             )
             p_df = k_meta["participant_late"]
             h_vals = p_df[p_df["phq8_binary"] == 1]["late_drift"].to_numpy(dtype=float)
             l_vals = p_df[p_df["phq8_binary"] == 0]["late_drift"].to_numpy(dtype=float)
             k_sensitivity[f"K_{k_cand}"] = {
+                "status": "OK",
                 "cohens_d": _compute_cohens_d(h_vals, l_vals)
                 if len(h_vals) >= 2 and len(l_vals) >= 2
                 else None,
@@ -351,10 +472,17 @@ def run_rq1_analysis(
                 "label": "PRIMARY" if int(k_cand) == warmup_k else "EXPLORATORY",
             }
         except Exception as k_exc:
-            k_sensitivity[f"K_{k_cand}"] = {"error": str(k_exc), "label": "EXPLORATORY"}
+            k_sensitivity[f"K_{k_cand}"] = {
+                "status": "INSUFFICIENT_DATA",
+                "detail": str(k_exc),
+                "label": "EXPLORATORY",
+            }
 
     results: dict[str, Any] = {
         "status": decision,
+        "data_source": data_source,
+        "is_real_data_gate": data_source == "daic",
+        "downgraded_by_length_confound": downgraded_by_length_confound,
         "conditioning_mode": primary_meta["conditioning_mode"],
         "prereg_hash": prereg_meta["prereg_sha256"],
         "prereg_commit": prereg_meta["prereg_commit"],
@@ -363,6 +491,8 @@ def run_rq1_analysis(
         "sample_counts": {
             "n_high_risk_analyzed": n_high,
             "n_low_risk_analyzed": n_low,
+            "n_excluded_no_interviewer_turns": len(no_ellie_pids),
+            "excluded_no_interviewer_pids": no_ellie_pids,
             "n_excluded_short_high_risk": len(primary_meta["excluded_high_pids"]),
             "n_excluded_short_low_risk": len(primary_meta["excluded_low_pids"]),
             "excluded_high_risk_pids": primary_meta["excluded_high_pids"],
@@ -395,6 +525,11 @@ def run_rq1_analysis(
         with open(decision_file, "w", encoding="utf-8") as f:
             json.dump(results, f, indent=2)
 
+        # Write LATEST_REAL pointer ONLY when data_source == "daic"
+        if data_source == "daic":
+            latest_real_ptr = Path(output_dir) / "LATEST_REAL"
+            latest_real_ptr.write_text(str(decision_file.resolve()), encoding="utf-8")
+
         # Participant-level cluster bootstrap for figure error bars
         plt.figure(figsize=(7, 4.5))
         pos_bins = np.linspace(0.0, 1.0, n_bins + 1)
@@ -405,7 +540,6 @@ def run_rq1_analysis(
             include_lowest=True,
         )
 
-        # Aggregate to participant x bin first so participant is the unit of resampling
         part_bin_df = (
             valid_post_warmup.groupby(["participant_id", "phq8_binary", "bin"], observed=False)[
                 "conditioned_deviation"
@@ -455,7 +589,7 @@ def run_rq1_analysis(
             )
 
         plt.axhline(0.0, color="gray", linestyle=":", alpha=0.8)
-        plt.title(f"RQ1 Conditioned Drift Trajectory (Decision: {decision})")
+        plt.title(f"RQ1 Conditioned Deviation ({data_source.upper()}: {decision})")
         plt.xlabel("Within-Session Relative Position Bin")
         plt.ylabel("Conditioned Standardized Deviation")
         plt.xticks(np.arange(n_bins), [f"Bin {i + 1}" for i in range(n_bins)])

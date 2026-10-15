@@ -11,7 +11,6 @@ import typer
 from anjaney.baseline.rq1_runner import run_rq1_analysis
 from anjaney.conformal.conformal_runner import run_conformal_pipeline
 from anjaney.data.daic_loader import DAICLoader
-from anjaney.data.inspector import run_inspection
 from anjaney.data.synthetic import SyntheticCohortGenerator
 from anjaney.eval.grid import EvaluationGridRunner
 from anjaney.eval.report import (
@@ -57,26 +56,29 @@ def data_default():
 
 
 @data_app.command("inspect")
-def data_inspect(
-    source: Annotated[str, typer.Option(help="Data source: 'synthetic' or 'daic'")] = "synthetic",
-    daic_root: Annotated[
-        str | None, typer.Option(help="Path to DAIC directory (or env DAIC_ROOT)")
-    ] = None,
-    output: Annotated[str, typer.Option(help="Output path for inspection report")] = (
-        "docs/dataset_schema_report.md"
+def inspect_data(
+    source: str = typer.Option("synthetic", help="Dataset source: synthetic or daic"),
+    data_root: Path = typer.Option(
+        Path("data/daic_woz"), help="Directory containing dataset files"
     ),
-):
-    try:
-        typer.echo(f"Running dataset integrity inspection on '{source}'...")
-        _, report_md = run_inspection(source=source, daic_root=daic_root)
-        out_path = Path(output)
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(out_path, "w", encoding="utf-8") as f:
-            f.write(report_md)
-        typer.echo(f"Inspection report generated successfully at {out_path}")
-    except Exception as e:
-        typer.secho(f"Error inspecting dataset: {e}", fg=typer.colors.RED)
-        raise typer.Exit(code=1) from e
+    output_json: Path = typer.Option(
+        Path("data/processed/dataset_report.json"),
+        help="Output path for aggregate report",
+    ),
+) -> None:
+    """Inspect dataset and emit an aggregate-only schema report (ZERO raw text)."""
+    resolved_root = (
+        Path("data/synthetic")
+        if source == "synthetic" and str(data_root) == "data/daic_woz"
+        else data_root
+    )
+    loader = DAICLoader(data_root=resolved_root)
+    report = loader.inspect_dataset()
+
+    output_json.parent.mkdir(parents=True, exist_ok=True)
+    report_json = report.model_dump_json(indent=2)
+    output_json.write_text(report_json, encoding="utf-8")
+    typer.echo(report_json)
 
 
 @data_app.command("generate-synthetic")
