@@ -4,6 +4,12 @@ import re
 
 from anjaney.data.schemas import Session, Turn
 
+"""Backward-compatibility re-export shim for cleaner.py."""
+
+from anjaney.preprocess.cleaner import TranscriptCleaner, clean_session
+
+__all__ = ["TranscriptCleaner", "clean_session"]
+
 
 def clean_session(session: Session, lowercase: bool = False) -> Session:
     """Normalize session timestamps to start from 0.0s, order turns, and collapse text whitespace."""
