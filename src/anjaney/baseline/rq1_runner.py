@@ -374,6 +374,7 @@ def run_rq1_analysis(
             "mean_high_risk_drift": float(np.mean(high_risk_drifts)),
             "mean_low_risk_drift": float(np.mean(low_risk_drifts)),
             "observed_group_difference": obs_diff,
+            "bootstrap_ci_95": raw_ci_95,
             "raw_diff_bootstrap_ci_95": raw_ci_95,
             "cohens_d": cohens_d,
             "cohens_d_bootstrap_ci_95": d_ci_95,

@@ -1,41 +1,41 @@
 start_time,stop_time,speaker,value
-2.0,4.67,Interviewer,How have you been feeling over the past couple of weeks?
+2.0,4.67,Interviewer,rapport_intro: Where are you from originally and how is campus life?
 5.51,9.14,Participant,I felt good about the assignment we handed in this afternoon.
-9.72,13.94,Interviewer,Tell me about how your academic routine has been going.
+9.72,13.94,Interviewer,rapport_intro: Tell me a little bit about yourself and your major.
 15.49,18.69,Participant,"Nothing feels engaging or meaningful lately, just going through motions."
-19.34,22.97,Interviewer,How are things with your friends and social connections?
-24.45,28.52,Participant,I had a productive study session with my friends at the library.
-28.96,32.55,Interviewer,What do you typically do when you start feeling stressed?
-33.77,37.56,Participant,I had a productive study session with my friends at the library.
-38.15,42.15,Interviewer,How would you describe your sleep and daily energy levels?
-43.35,46.85,Participant,I talked with my roommates earlier and we made dinner together.
-47.3,50.93,Interviewer,How have you been feeling over the past couple of weeks?
-51.8,55.55,Participant,Looking forward to the weekend break and getting some rest.
-56.23,59.01,Interviewer,Tell me about how your academic routine has been going.
-60.21,64.68,Participant,I felt good about the assignment we handed in this afternoon.
-65.35,68.54,Interviewer,How are things with your friends and social connections?
-70.2,73.18,Participant,Everything feels like an overwhelming uphill battle right now.
-73.96,77.25,Interviewer,What do you typically do when you start feeling stressed?
-78.9,83.03,Participant,I had a productive study session with my friends at the library.
-83.72,87.12,Interviewer,How would you describe your sleep and daily energy levels?
-88.73,93.15,Participant,Going for a morning run helps clear my head and gives me energy.
-93.78,96.45,Interviewer,How have you been feeling over the past couple of weeks?
-98.43,102.81,Participant,Going for a morning run helps clear my head and gives me energy.
-103.15,105.96,Interviewer,Tell me about how your academic routine has been going.
-107.49,111.58,Participant,"Classes are demanding this semester, but I am keeping up fine."
-111.93,116.32,Interviewer,How are things with your friends and social connections?
-117.59,122.02,Participant,"Classes are demanding this semester, but I am keeping up fine."
-122.36,125.72,Interviewer,What do you typically do when you start feeling stressed?
-127.1,131.95,Participant,I just feel completely exhausted and drained no matter how long I sleep.
-132.3,136.0,Interviewer,How would you describe your sleep and daily energy levels?
-137.64,142.2,Participant,I talked with my roommates earlier and we made dinner together.
-142.71,146.77,Interviewer,How have you been feeling over the past couple of weeks?
-148.51,153.06,Participant,Going for a morning run helps clear my head and gives me energy.
-153.44,156.7,Interviewer,Tell me about how your academic routine has been going.
-158.16,163.13,Participant,I struggled to get out of bed this morning and skipped morning lecture.
-163.5,166.33,Interviewer,How are things with your friends and social connections?
-168.17,172.4,Participant,"Classes are demanding this semester, but I am keeping up fine."
-172.82,176.57,Interviewer,What do you typically do when you start feeling stressed?
-178.74,183.44,Participant,Going for a morning run helps clear my head and gives me energy.
-183.81,186.32,Interviewer,How would you describe your sleep and daily energy levels?
-187.82,191.82,Participant,"Classes are demanding this semester, but I am keeping up fine."
+19.34,22.97,Interviewer,rapport_intro: Where are you from originally and how is campus life?
+24.46,28.53,Participant,I had a productive study session with my friends at the library.
+28.97,32.56,Interviewer,rapport_intro: Tell me a little bit about yourself and your major.
+33.78,37.57,Participant,I had a productive study session with my friends at the library.
+38.16,42.16,Interviewer,rapport_intro: Where are you from originally and how is campus life?
+43.37,46.87,Participant,I talked with my roommates earlier and we made dinner together.
+47.32,50.95,Interviewer,behavior_routine: What do you typically do to relax on the weekend with friends?
+51.83,55.58,Participant,Looking forward to the weekend break and getting some rest.
+56.26,59.04,Interviewer,behavior_routine: Tell me about how your daily academic routine and sleep have been going.
+60.26,64.73,Participant,I felt good about the assignment we handed in this afternoon.
+65.4,68.59,Interviewer,behavior_routine: What do you typically do to relax on the weekend with friends?
+70.26,73.24,Participant,Everything feels like an overwhelming uphill battle right now.
+74.02,77.31,Interviewer,behavior_routine: Tell me about how your daily academic routine and sleep have been going.
+78.97,83.1,Participant,I had a productive study session with my friends at the library.
+83.79,87.19,Interviewer,behavior_routine: What do you typically do to relax on the weekend with friends?
+88.82,93.24,Participant,Going for a morning run helps clear my head and gives me energy.
+93.87,96.54,Interviewer,"distress_probe: Have you been feeling down, depressed, or hopeless over the past couple of weeks?"
+98.54,102.92,Participant,Going for a morning run helps clear my head and gives me energy.
+103.26,106.07,Interviewer,distress_probe: How have you been coping when things feel overwhelming or stressful in the past?
+107.63,111.72,Participant,"Classes are demanding this semester, but I am keeping up fine."
+112.07,116.46,Interviewer,"distress_probe: Have you been feeling down, depressed, or hopeless over the past couple of weeks?"
+117.76,122.19,Participant,"Classes are demanding this semester, but I am keeping up fine."
+122.53,125.89,Interviewer,distress_probe: How have you been coping when things feel overwhelming or stressful in the past?
+127.3,132.15,Participant,I just feel completely exhausted and drained no matter how long I sleep.
+132.5,136.2,Interviewer,"distress_probe: Have you been feeling down, depressed, or hopeless over the past couple of weeks?"
+137.86,142.42,Participant,I talked with my roommates earlier and we made dinner together.
+142.93,146.99,Interviewer,"closing_reflection: Thank you for sharing today, is there anything else on your mind?"
+148.76,153.31,Participant,Going for a morning run helps clear my head and gives me energy.
+153.69,156.95,Interviewer,closing_reflection: What are your plans and goals for the rest of the semester?
+158.44,163.41,Participant,I struggled to get out of bed this morning and skipped morning lecture.
+163.78,166.61,Interviewer,"closing_reflection: Thank you for sharing today, is there anything else on your mind?"
+168.49,172.72,Participant,"Classes are demanding this semester, but I am keeping up fine."
+173.14,176.89,Interviewer,closing_reflection: What are your plans and goals for the rest of the semester?
+179.1,183.8,Participant,Going for a morning run helps clear my head and gives me energy.
+184.17,186.68,Interviewer,"closing_reflection: Thank you for sharing today, is there anything else on your mind?"
+188.22,192.22,Participant,"Classes are demanding this semester, but I am keeping up fine."

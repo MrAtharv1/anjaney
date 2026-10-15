@@ -1,0 +1,73 @@
+{
+  "status": "INCONCLUSIVE",
+  "conditioning_mode": "prompt_phase_and_rel_position",
+  "prereg_hash": "17e85ac4bccfbd4aacd5fe7199a4a1807cec41d0b16aa3e680fe3fe9de6806f0",
+  "prereg_commit": "7ab23b7d19ec2156bfecf7727274c445415bc06d",
+  "git_hash": "95b32f897964057be37bbb1613096fb57954354a-dirty",
+  "code_dirty": true,
+  "sample_counts": {
+    "n_high_risk_analyzed": 12,
+    "n_low_risk_analyzed": 28,
+    "n_excluded_short_high_risk": 0,
+    "n_excluded_short_low_risk": 0,
+    "excluded_high_risk_pids": [],
+    "excluded_low_risk_pids": [],
+    "n_missing_modality_windows_dropped": 0,
+    "n_test_split_held_out": 10
+  },
+  "statistics": {
+    "mean_high_risk_drift": 0.11109510790166192,
+    "mean_low_risk_drift": 0.01372399223459235,
+    "observed_group_difference": 0.09737111566706957,
+    "raw_diff_bootstrap_ci_95": [
+      -0.09960771600466083,
+      0.3150186014494531
+    ],
+    "cohens_d": 0.2945430618474043,
+    "cohens_d_bootstrap_ci_95": [
+      -0.33797676199104926,
+      0.9383246117473362
+    ],
+    "cohens_d_tost_ci_90": [
+      -0.23784358766671243,
+      0.8437522090937556
+    ],
+    "equivalence_bounds_d": [
+      -0.3,
+      0.3
+    ],
+    "minimum_detectable_effect_d_80pct_power": 0.8579153327092315,
+    "permutation_p_value": 0.20887911208879112,
+    "length_residualized_sensitivity_cohens_d": 0.2539488371263661,
+    "mixed_effects": {
+      "converged": true,
+      "random_effects": "intercept_and_rel_position_slope",
+      "interaction_coef": 0.5432270761816751,
+      "interaction_p": 0.4361379346468156,
+      "interaction_ci_95": [
+        -0.8240035978697158,
+        1.910457750233066
+      ],
+      "n_tokens_coef": -0.022133051116451412,
+      "n_tokens_p": 3.779398792575514e-09
+    },
+    "exploratory_warmup_k_sensitivity": {
+      "K_3": {
+        "cohens_d": 0.2945430618474043,
+        "n_high_retained": 12,
+        "n_low_retained": 28,
+        "label": "PRIMARY"
+      },
+      "K_5": {
+        "cohens_d": -0.1502283120917432,
+        "n_high_retained": 3,
+        "n_low_retained": 9,
+        "label": "EXPLORATORY"
+      },
+      "K_8": {
+        "error": "No training participants have > 8 windows to fit within-person covariance.",
+        "label": "EXPLORATORY"
+      }
+    }
+  }
+}

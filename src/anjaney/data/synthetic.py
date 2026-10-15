@@ -107,16 +107,17 @@ class SyntheticCohortGenerator:
                 )
                 current_time += prompt_duration
 
-                # 2. Response latency (with shared progression fatigue + optional high-risk drift)
-                base_latency = 1.2 if not is_high_risk else 2.8
-                fatigue_latency = position_ratio * 0.8
-                extra_drift = (
-                    (position_ratio * 1.5) if (is_high_risk and self.extra_high_risk_drift) else 0.0
+                # 2. Response latency (with shared progression fatigue + optional high-risk late drift)
+                base_latency = 1.2 if not is_high_risk else 2.4
+                fatigue_latency = position_ratio * 0.6
+                is_late_drift_active = (
+                    is_high_risk and self.extra_high_risk_drift and position_ratio >= 0.45
                 )
+                extra_drift = (position_ratio * 3.2) if is_late_drift_active else 0.0
 
                 latency = max(
                     0.4,
-                    base_latency + fatigue_latency + extra_drift + random.gauss(0, 0.3),
+                    base_latency + fatigue_latency + extra_drift + random.gauss(0, 0.20),
                 )
                 current_time += latency
 
@@ -130,9 +131,12 @@ class SyntheticCohortGenerator:
                     else random.choice(LOW_RISK_TEMPLATES)
                 )
 
-                # Duration proportional to length with individual variation
+                # Duration proportional to length; slows down in late session when extra_high_risk_drift=True
                 words = len(response_text.split())
-                resp_duration = round(words / random.uniform(2.4, 3.2), 2)
+                speaking_rate = (
+                    random.uniform(1.4, 1.8) if is_late_drift_active else random.uniform(2.6, 3.1)
+                )
+                resp_duration = round(words / speaking_rate, 2)
 
                 turns.append(
                     Turn(
