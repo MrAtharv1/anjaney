@@ -33,7 +33,9 @@ class ConformalQuantileRegressor:
         self.is_infinite: bool = False
 
     def _fit_transform_features(self, X: np.ndarray) -> np.ndarray:
-        X_scaled = self.scaler.fit_transform(X)
+        X_clean = np.nan_to_num(X, nan=0.0)
+        X_scaled = self.scaler.fit_transform(X_clean)
+        X_scaled = np.nan_to_num(X_scaled, nan=0.0)
         n_comp = min(self.n_pca, X_scaled.shape[0] - 1, X_scaled.shape[1])
         if n_comp >= 2:
             self.pca = PCA(n_components=n_comp, random_state=self.seed)
@@ -42,7 +44,9 @@ class ConformalQuantileRegressor:
         return X_scaled
 
     def _transform_features(self, X: np.ndarray) -> np.ndarray:
-        X_scaled = self.scaler.transform(X)
+        X_clean = np.nan_to_num(X, nan=0.0)
+        X_scaled = self.scaler.transform(X_clean)
+        X_scaled = np.nan_to_num(X_scaled, nan=0.0)
         if self.pca is not None:
             return self.pca.transform(X_scaled)
         return X_scaled

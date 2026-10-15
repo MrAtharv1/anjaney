@@ -26,18 +26,25 @@ class ParticipantAggregator:
             binaries.append(int(group["phq8_binary"].iloc[0]))
 
             feat_vals = group[self.feature_cols].values
-            mean_feats = np.mean(feat_vals, axis=0)
-            std_feats = np.std(feat_vals, axis=0) if len(group) > 1 else np.zeros_like(mean_feats)
+            with np.errstate(all="ignore"):
+                mean_feats = np.nanmean(feat_vals, axis=0)
+                mean_feats = np.nan_to_num(mean_feats, nan=0.0)
+                std_feats = (
+                    np.nanstd(feat_vals, axis=0)
+                    if len(group) > 1
+                    else np.zeros_like(mean_feats)
+                )
+                std_feats = np.nan_to_num(std_feats, nan=0.0)
 
-            early_mask = group["rel_position"] < 0.5
-            late_mask = group["rel_position"] >= 0.5
+                early_mask = group["rel_position"] < 0.5
+                late_mask = group["rel_position"] >= 0.5
 
-            if early_mask.any() and late_mask.any():
-                early_mean = np.mean(feat_vals[early_mask], axis=0)
-                late_mean = np.mean(feat_vals[late_mask], axis=0)
-                drift_feats = late_mean - early_mean
-            else:
-                drift_feats = np.zeros_like(mean_feats)
+                if early_mask.any() and late_mask.any():
+                    early_mean = np.nan_to_num(np.nanmean(feat_vals[early_mask], axis=0), nan=0.0)
+                    late_mean = np.nan_to_num(np.nanmean(feat_vals[late_mask], axis=0), nan=0.0)
+                    drift_feats = late_mean - early_mean
+                else:
+                    drift_feats = np.zeros_like(mean_feats)
 
             row_dict = {"participant_id": str(pid)}
             for i, col in enumerate(self.feature_cols):
@@ -57,9 +64,14 @@ class ParticipantAggregator:
         self, X_train: pd.DataFrame, X_val: pd.DataFrame
     ) -> tuple[np.ndarray, np.ndarray]:
         """Fit scaler and PCA inside the training fold and transform validation fold."""
+        X_tr_clean = np.nan_to_num(X_train.values, nan=0.0)
+        X_val_clean = np.nan_to_num(X_val.values, nan=0.0)
+
         self.scaler = StandardScaler()
-        X_tr_scaled = self.scaler.fit_transform(X_train.values)
-        X_val_scaled = self.scaler.transform(X_val.values)
+        X_tr_scaled = self.scaler.fit_transform(X_tr_clean)
+        X_val_scaled = self.scaler.transform(X_val_clean)
+        X_tr_scaled = np.nan_to_num(X_tr_scaled, nan=0.0)
+        X_val_scaled = np.nan_to_num(X_val_scaled, nan=0.0)
 
         if self.n_pca_components is not None:
             max_components = min(

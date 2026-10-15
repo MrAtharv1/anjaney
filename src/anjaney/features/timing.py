@@ -74,6 +74,7 @@ class TimingFeatureExtractor:
         # 3. Inter-turn pauses between participant's consecutive turns (if any)
         if n_turns > 1:
             pauses = np.maximum(0.0, starts[1:] - ends[:-1])
+            pauses = pauses[~np.isnan(pauses)]
         else:
             pauses = np.array([0.0])
 
@@ -83,7 +84,7 @@ class TimingFeatureExtractor:
         speech_rate = n_tokens / max(1.0, total_speaking_time)
 
         # 5. Window-level aggregations
-        mean_dur = float(np.mean(durations))
+        mean_dur = float(np.mean(durations)) if len(durations) > 0 else 0.0
         std_dur = float(np.std(durations)) if len(durations) > 1 else 0.0
 
         if len(valid_latencies) > 0:
@@ -125,8 +126,7 @@ class TimingFeatureExtractor:
             "timing_median_latency": median_lat,
             "timing_std_latency": std_lat,
             "timing_iqr_latency": iqr_lat,
-            "timing_latency_cv": lat_cv,
-            "timing_mean_pause": float(np.mean(pauses)),
+            "timing_mean_pause": float(np.mean(pauses)) if len(pauses) > 0 else 0.0,
             "timing_speech_rate_wps": speech_rate,
             "timing_turns_per_minute": turns_per_minute,
             "timing_engagement_decay": engagement_decay,
