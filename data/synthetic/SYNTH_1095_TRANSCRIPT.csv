@@ -1,0 +1,37 @@
+start_time,stop_time,speaker,value
+2.0,4.52,Interviewer,rapport_intro: Where are you from originally and how is campus life?
+5.76,9.35,Participant,"Classes are demanding this semester, but I am keeping up fine."
+9.83,13.82,Interviewer,rapport_intro: Tell me a little bit about yourself and your major.
+15.01,18.65,Participant,"Classes are demanding this semester, but I am keeping up fine."
+19.13,23.45,Interviewer,rapport_intro: Where are you from originally and how is campus life?
+24.39,28.48,Participant,I felt good about the assignment we handed in this afternoon.
+28.93,33.03,Interviewer,rapport_intro: Tell me a little bit about yourself and your major.
+34.15,39.0,Participant,Going for a morning run helps clear my head and gives me energy.
+39.36,43.68,Interviewer,rapport_intro: Where are you from originally and how is campus life?
+44.81,48.37,Participant,I felt good about the assignment we handed in this afternoon.
+49.01,53.32,Interviewer,behavior_routine: What do you typically do to relax on the weekend with friends?
+54.83,58.41,Participant,I felt good about the assignment we handed in this afternoon.
+59.16,61.85,Interviewer,behavior_routine: Tell me about how your daily academic routine and sleep have been going.
+63.66,67.76,Participant,I talked with my roommates earlier and we made dinner together.
+68.07,71.95,Interviewer,behavior_routine: What do you typically do to relax on the weekend with friends?
+73.5,77.3,Participant,I talked with my roommates earlier and we made dinner together.
+77.69,81.98,Interviewer,behavior_routine: Tell me about how your daily academic routine and sleep have been going.
+83.94,87.5,Participant,"Classes are demanding this semester, but I am keeping up fine."
+88.24,90.88,Interviewer,distress_probe: How have you been coping when things feel overwhelming or stressful in the past?
+92.31,96.73,Participant,I struggled to get out of bed this morning and skipped morning lecture.
+97.49,100.21,Interviewer,"distress_probe: Have you been feeling down, depressed, or hopeless over the past couple of weeks?"
+102.23,106.22,Participant,I felt good about the assignment we handed in this afternoon.
+106.88,111.28,Interviewer,distress_probe: How have you been coping when things feel overwhelming or stressful in the past?
+112.66,115.57,Participant,Everything feels like an overwhelming uphill battle right now.
+116.12,119.86,Interviewer,"distress_probe: Have you been feeling down, depressed, or hopeless over the past couple of weeks?"
+120.96,125.04,Participant,"Classes are demanding this semester, but I am keeping up fine."
+125.48,129.02,Interviewer,"closing_reflection: Thank you for sharing today, is there anything else on your mind?"
+130.35,134.34,Participant,I talked with my roommates earlier and we made dinner together.
+134.72,138.52,Interviewer,closing_reflection: What are your plans and goals for the rest of the semester?
+140.17,144.37,Participant,"Classes are demanding this semester, but I am keeping up fine."
+145.04,149.06,Interviewer,"closing_reflection: Thank you for sharing today, is there anything else on your mind?"
+150.64,154.98,Participant,I had a productive study session with my friends at the library.
+155.3,159.54,Interviewer,closing_reflection: What are your plans and goals for the rest of the semester?
+161.33,165.27,Participant,"Classes are demanding this semester, but I am keeping up fine."
+166.02,169.28,Interviewer,"closing_reflection: Thank you for sharing today, is there anything else on your mind?"
+171.06,175.45,Participant,I feel like I am letting everyone down constantly and cannot focus.

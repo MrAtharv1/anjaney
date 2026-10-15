@@ -1,0 +1,41 @@
+start_time,stop_time,speaker,value
+2.0,6.18,Interviewer,rapport_intro: Where are you from originally and how is campus life?
+8.23,12.56,Participant,I had a productive study session with my friends at the library.
+12.87,16.31,Interviewer,rapport_intro: Tell me a little bit about yourself and your major.
+18.99,22.7,Participant,I talked with my roommates earlier and we made dinner together.
+23.14,27.15,Interviewer,rapport_intro: Where are you from originally and how is campus life?
+29.4,32.83,Participant,Everything feels like an overwhelming uphill battle right now.
+33.28,37.75,Interviewer,rapport_intro: Tell me a little bit about yourself and your major.
+40.4,44.29,Participant,I feel like I am letting everyone down constantly and cannot focus.
+44.65,47.9,Interviewer,rapport_intro: Where are you from originally and how is campus life?
+50.39,55.26,Participant,I just feel completely exhausted and drained no matter how long I sleep.
+56.06,60.28,Interviewer,behavior_routine: What do you typically do to relax on the weekend with friends?
+62.8,66.52,Participant,"Nothing feels engaging or meaningful lately, just going through motions."
+66.92,71.22,Interviewer,behavior_routine: Tell me about how your daily academic routine and sleep have been going.
+73.52,77.15,Participant,I felt good about the assignment we handed in this afternoon.
+77.58,81.65,Interviewer,behavior_routine: What do you typically do to relax on the weekend with friends?
+84.59,89.52,Participant,I struggled to get out of bed this morning and skipped morning lecture.
+89.98,93.71,Interviewer,behavior_routine: Tell me about how your daily academic routine and sleep have been going.
+96.42,99.88,Participant,"Nothing feels engaging or meaningful lately, just going through motions."
+100.24,103.38,Interviewer,behavior_routine: What do you typically do to relax on the weekend with friends?
+107.43,112.56,Participant,Everything feels like an overwhelming uphill battle right now.
+113.34,116.67,Interviewer,"distress_probe: Have you been feeling down, depressed, or hopeless over the past couple of weeks?"
+120.98,126.64,Participant,Everything feels like an overwhelming uphill battle right now.
+127.19,130.25,Interviewer,distress_probe: How have you been coping when things feel overwhelming or stressful in the past?
+134.88,142.93,Participant,I have been avoiding messages from my family and staying by myself.
+143.36,146.45,Interviewer,"distress_probe: Have you been feeling down, depressed, or hopeless over the past couple of weeks?"
+151.47,158.1,Participant,I felt good about the assignment we handed in this afternoon.
+158.83,162.72,Interviewer,distress_probe: How have you been coping when things feel overwhelming or stressful in the past?
+167.85,176.28,Participant,I have been avoiding messages from my family and staying by myself.
+176.59,179.52,Interviewer,"distress_probe: Have you been feeling down, depressed, or hopeless over the past couple of weeks?"
+184.77,190.57,Participant,"Nothing feels engaging or meaningful lately, just going through motions."
+191.25,194.78,Interviewer,"closing_reflection: Thank you for sharing today, is there anything else on your mind?"
+200.07,207.79,Participant,I struggled to get out of bed this morning and skipped morning lecture.
+208.42,212.62,Interviewer,closing_reflection: What are your plans and goals for the rest of the semester?
+218.3,224.45,Participant,I talked with my roommates earlier and we made dinner together.
+225.18,228.71,Interviewer,"closing_reflection: Thank you for sharing today, is there anything else on your mind?"
+234.57,241.58,Participant,"Nothing feels engaging or meaningful lately, just going through motions."
+242.09,245.96,Interviewer,closing_reflection: What are your plans and goals for the rest of the semester?
+252.21,259.07,Participant,I have been avoiding messages from my family and staying by myself.
+259.74,262.72,Interviewer,"closing_reflection: Thank you for sharing today, is there anything else on your mind?"
+268.85,277.48,Participant,Going for a morning run helps clear my head and gives me energy.

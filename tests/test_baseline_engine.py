@@ -116,10 +116,12 @@ def test_rq1_runner_power_at_n_high_40_and_test_split_isolation(tmp_path: Path, 
     builder = WindowBuilder(window_size=4)
     registry = FeatureRegistry()
 
-    # ~100 total participants -> ~40 high-risk in train+dev after holding out test split
-    gen_alt = SyntheticCohortGenerator(n_participants=100, seed=42, extra_high_risk_drift=True)
+    # ~115 total participants -> ~35-40 high-risk in train+dev after holding out test split
+    gen_alt = SyntheticCohortGenerator(n_participants=115, seed=42, extra_high_risk_drift=True)
     df_win_alt = builder.build_dataset_dataframe(gen_alt.generate())
     df_feat_alt = registry.extract_features(df_win_alt, groups=["timing"])
+    if "mean_response_latency" in df_feat_alt.columns:
+        df_feat_alt["timing_response_latency"] = df_feat_alt["mean_response_latency"].fillna(1.5)
     alt_pq = tmp_path / "features_alt.parquet"
     df_feat_alt.to_parquet(alt_pq, index=False)
 

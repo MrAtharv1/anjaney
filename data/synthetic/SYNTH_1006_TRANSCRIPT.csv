@@ -1,47 +1,45 @@
 start_time,stop_time,speaker,value
-2.0,5.75,Interviewer,rapport_intro: Where are you from originally and how is campus life?
-7.21,11.28,Participant,Looking forward to the weekend break and getting some rest.
-11.9,16.24,Interviewer,rapport_intro: Tell me a little bit about yourself and your major.
-17.25,21.7,Participant,I felt good about the assignment we handed in this afternoon.
-22.49,26.51,Interviewer,rapport_intro: Where are you from originally and how is campus life?
-27.75,31.27,Participant,"Classes are demanding this semester, but I am keeping up fine."
-31.59,35.68,Interviewer,rapport_intro: Tell me a little bit about yourself and your major.
-36.85,40.86,Participant,"Classes are demanding this semester, but I am keeping up fine."
-41.28,44.6,Interviewer,rapport_intro: Where are you from originally and how is campus life?
-45.87,49.1,Participant,Looking forward to the weekend break and getting some rest.
-49.71,52.69,Interviewer,rapport_intro: Tell me a little bit about yourself and your major.
-53.9,58.93,Participant,Going for a morning run helps clear my head and gives me energy.
-59.55,62.97,Interviewer,behavior_routine: Tell me about how your daily academic routine and sleep have been going.
-64.07,67.81,Participant,"Classes are demanding this semester, but I am keeping up fine."
-68.19,71.57,Interviewer,behavior_routine: What do you typically do to relax on the weekend with friends?
-72.47,76.26,Participant,Looking forward to the weekend break and getting some rest.
-77.04,80.92,Interviewer,behavior_routine: Tell me about how your daily academic routine and sleep have been going.
-82.16,86.59,Participant,I talked with my roommates earlier and we made dinner together.
-87.08,90.3,Interviewer,behavior_routine: What do you typically do to relax on the weekend with friends?
-91.9,96.07,Participant,I felt good about the assignment we handed in this afternoon.
-96.86,100.68,Interviewer,behavior_routine: Tell me about how your daily academic routine and sleep have been going.
-102.18,105.64,Participant,I felt good about the assignment we handed in this afternoon.
-106.4,110.39,Interviewer,distress_probe: How have you been coping when things feel overwhelming or stressful in the past?
-112.38,116.02,Participant,"Classes are demanding this semester, but I am keeping up fine."
-116.44,120.54,Interviewer,"distress_probe: Have you been feeling down, depressed, or hopeless over the past couple of weeks?"
-122.21,125.86,Participant,I felt good about the assignment we handed in this afternoon.
-126.5,129.27,Interviewer,distress_probe: How have you been coping when things feel overwhelming or stressful in the past?
-131.13,135.24,Participant,I feel like I am letting everyone down constantly and cannot focus.
-135.69,139.07,Interviewer,"distress_probe: Have you been feeling down, depressed, or hopeless over the past couple of weeks?"
-140.36,145.24,Participant,I struggled to get out of bed this morning and skipped morning lecture.
-145.75,148.65,Interviewer,distress_probe: How have you been coping when things feel overwhelming or stressful in the past?
-150.16,154.05,Participant,"Classes are demanding this semester, but I am keeping up fine."
-154.81,158.97,Interviewer,"distress_probe: Have you been feeling down, depressed, or hopeless over the past couple of weeks?"
-160.72,164.39,Participant,"Classes are demanding this semester, but I am keeping up fine."
-164.86,167.59,Interviewer,"closing_reflection: Thank you for sharing today, is there anything else on your mind?"
-169.97,174.3,Participant,Going for a morning run helps clear my head and gives me energy.
-174.71,178.56,Interviewer,closing_reflection: What are your plans and goals for the rest of the semester?
-180.28,183.99,Participant,Looking forward to the weekend break and getting some rest.
-184.69,187.22,Interviewer,"closing_reflection: Thank you for sharing today, is there anything else on your mind?"
-188.84,192.92,Participant,I talked with my roommates earlier and we made dinner together.
-193.59,196.61,Interviewer,closing_reflection: What are your plans and goals for the rest of the semester?
-198.22,202.47,Participant,I felt good about the assignment we handed in this afternoon.
-202.78,207.05,Interviewer,"closing_reflection: Thank you for sharing today, is there anything else on your mind?"
-209.31,213.19,Participant,Looking forward to the weekend break and getting some rest.
-213.52,217.67,Interviewer,closing_reflection: What are your plans and goals for the rest of the semester?
-219.88,225.22,Participant,Going for a morning run helps clear my head and gives me energy.
+2.0,5.6,Interviewer,rapport_intro: Where are you from originally and how is campus life?
+6.99,11.58,Participant,I had a productive study session with my friends at the library.
+12.2,16.3,Interviewer,rapport_intro: Tell me a little bit about yourself and your major.
+17.44,21.27,Participant,"Classes are demanding this semester, but I am keeping up fine."
+21.85,24.54,Interviewer,rapport_intro: Where are you from originally and how is campus life?
+26.24,30.34,Participant,I had a productive study session with my friends at the library.
+30.72,35.09,Interviewer,rapport_intro: Tell me a little bit about yourself and your major.
+36.35,40.37,Participant,I felt good about the assignment we handed in this afternoon.
+41.09,45.55,Interviewer,rapport_intro: Where are you from originally and how is campus life?
+46.87,50.37,Participant,Looking forward to the weekend break and getting some rest.
+51.11,55.34,Interviewer,rapport_intro: Tell me a little bit about yourself and your major.
+56.94,60.91,Participant,I talked with my roommates earlier and we made dinner together.
+61.6,64.63,Interviewer,behavior_routine: Tell me about how your daily academic routine and sleep have been going.
+66.32,69.55,Participant,Looking forward to the weekend break and getting some rest.
+70.09,72.89,Interviewer,behavior_routine: What do you typically do to relax on the weekend with friends?
+74.3,78.28,Participant,"Classes are demanding this semester, but I am keeping up fine."
+78.96,82.21,Interviewer,behavior_routine: Tell me about how your daily academic routine and sleep have been going.
+84.01,88.51,Participant,Going for a morning run helps clear my head and gives me energy.
+88.93,92.98,Interviewer,behavior_routine: What do you typically do to relax on the weekend with friends?
+94.27,98.5,Participant,I feel like I am letting everyone down constantly and cannot focus.
+99.26,102.52,Interviewer,behavior_routine: Tell me about how your daily academic routine and sleep have been going.
+104.36,108.93,Participant,Going for a morning run helps clear my head and gives me energy.
+109.25,112.75,Interviewer,distress_probe: How have you been coping when things feel overwhelming or stressful in the past?
+114.24,118.19,Participant,I had a productive study session with my friends at the library.
+118.71,122.26,Interviewer,"distress_probe: Have you been feeling down, depressed, or hopeless over the past couple of weeks?"
+123.49,127.06,Participant,I felt good about the assignment we handed in this afternoon.
+127.4,131.46,Interviewer,distress_probe: How have you been coping when things feel overwhelming or stressful in the past?
+133.12,136.51,Participant,Looking forward to the weekend break and getting some rest.
+137.13,141.33,Interviewer,"distress_probe: Have you been feeling down, depressed, or hopeless over the past couple of weeks?"
+143.16,146.94,Participant,"Classes are demanding this semester, but I am keeping up fine."
+147.68,151.16,Interviewer,distress_probe: How have you been coping when things feel overwhelming or stressful in the past?
+152.48,156.28,Participant,Looking forward to the weekend break and getting some rest.
+156.9,161.24,Interviewer,closing_reflection: What are your plans and goals for the rest of the semester?
+163.22,167.25,Participant,I had a productive study session with my friends at the library.
+167.9,170.6,Interviewer,"closing_reflection: Thank you for sharing today, is there anything else on your mind?"
+172.28,175.88,Participant,"Classes are demanding this semester, but I am keeping up fine."
+176.2,180.29,Interviewer,closing_reflection: What are your plans and goals for the rest of the semester?
+181.96,185.17,Participant,Everything feels like an overwhelming uphill battle right now.
+185.81,188.67,Interviewer,"closing_reflection: Thank you for sharing today, is there anything else on your mind?"
+190.6,193.89,Participant,Looking forward to the weekend break and getting some rest.
+194.5,197.48,Interviewer,closing_reflection: What are your plans and goals for the rest of the semester?
+199.34,203.23,Participant,"Classes are demanding this semester, but I am keeping up fine."
+203.86,208.16,Interviewer,"closing_reflection: Thank you for sharing today, is there anything else on your mind?"
+209.9,213.64,Participant,"Classes are demanding this semester, but I am keeping up fine."

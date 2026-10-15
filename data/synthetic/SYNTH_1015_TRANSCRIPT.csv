@@ -1,39 +1,45 @@
 start_time,stop_time,speaker,value
-2.0,4.88,Interviewer,rapport_intro: Where are you from originally and how is campus life?
-7.72,12.39,Participant,I have been avoiding messages from my family and staying by myself.
-13.14,16.25,Interviewer,rapport_intro: Tell me a little bit about yourself and your major.
-18.69,22.82,Participant,Going for a morning run helps clear my head and gives me energy.
-23.6,26.33,Interviewer,rapport_intro: Where are you from originally and how is campus life?
-29.73,32.77,Participant,Everything feels like an overwhelming uphill battle right now.
-33.27,36.25,Interviewer,rapport_intro: Tell me a little bit about yourself and your major.
-39.43,44.24,Participant,I struggled to get out of bed this morning and skipped morning lecture.
-44.81,48.03,Interviewer,rapport_intro: Where are you from originally and how is campus life?
-51.32,55.59,Participant,I just feel completely exhausted and drained no matter how long I sleep.
-56.25,60.27,Interviewer,behavior_routine: What do you typically do to relax on the weekend with friends?
-64.07,67.78,Participant,"Nothing feels engaging or meaningful lately, just going through motions."
-68.29,71.92,Interviewer,behavior_routine: Tell me about how your daily academic routine and sleep have been going.
-75.51,78.65,Participant,Everything feels like an overwhelming uphill battle right now.
-79.16,81.96,Interviewer,behavior_routine: What do you typically do to relax on the weekend with friends?
-85.82,90.02,Participant,I have been avoiding messages from my family and staying by myself.
-90.44,94.04,Interviewer,behavior_routine: Tell me about how your daily academic routine and sleep have been going.
-98.12,101.9,Participant,I have been avoiding messages from my family and staying by myself.
-102.52,106.0,Interviewer,distress_probe: How have you been coping when things feel overwhelming or stressful in the past?
-109.86,114.99,Participant,I struggled to get out of bed this morning and skipped morning lecture.
-115.65,119.13,Interviewer,"distress_probe: Have you been feeling down, depressed, or hopeless over the past couple of weeks?"
-123.53,128.14,Participant,I just feel completely exhausted and drained no matter how long I sleep.
-128.86,131.51,Interviewer,distress_probe: How have you been coping when things feel overwhelming or stressful in the past?
-135.53,139.51,Participant,I had a productive study session with my friends at the library.
-140.02,144.21,Interviewer,"distress_probe: Have you been feeling down, depressed, or hopeless over the past couple of weeks?"
-148.6,151.86,Participant,Everything feels like an overwhelming uphill battle right now.
-152.19,155.97,Interviewer,distress_probe: How have you been coping when things feel overwhelming or stressful in the past?
-160.89,164.65,Participant,I talked with my roommates earlier and we made dinner together.
-164.96,168.52,Interviewer,closing_reflection: What are your plans and goals for the rest of the semester?
-173.07,175.9,Participant,Everything feels like an overwhelming uphill battle right now.
-176.21,180.34,Interviewer,"closing_reflection: Thank you for sharing today, is there anything else on your mind?"
-185.08,189.1,Participant,"Nothing feels engaging or meaningful lately, just going through motions."
-189.45,192.25,Interviewer,closing_reflection: What are your plans and goals for the rest of the semester?
-197.23,200.85,Participant,"Classes are demanding this semester, but I am keeping up fine."
-201.19,205.61,Interviewer,"closing_reflection: Thank you for sharing today, is there anything else on your mind?"
-210.92,214.05,Participant,"Nothing feels engaging or meaningful lately, just going through motions."
-214.46,218.33,Interviewer,closing_reflection: What are your plans and goals for the rest of the semester?
-223.68,228.53,Participant,I had a productive study session with my friends at the library.
+2.0,5.32,Interviewer,rapport_intro: Where are you from originally and how is campus life?
+7.81,11.69,Participant,I feel like I am letting everyone down constantly and cannot focus.
+12.31,15.65,Interviewer,rapport_intro: Tell me a little bit about yourself and your major.
+18.28,22.23,Participant,I talked with my roommates earlier and we made dinner together.
+22.87,26.69,Interviewer,rapport_intro: Where are you from originally and how is campus life?
+29.14,33.1,Participant,I feel like I am letting everyone down constantly and cannot focus.
+33.46,37.95,Interviewer,rapport_intro: Tell me a little bit about yourself and your major.
+40.35,44.38,Participant,I had a productive study session with my friends at the library.
+45.17,48.6,Interviewer,rapport_intro: Where are you from originally and how is campus life?
+51.18,55.37,Participant,I have been avoiding messages from my family and staying by myself.
+56.08,59.08,Interviewer,rapport_intro: Tell me a little bit about yourself and your major.
+61.53,65.22,Participant,I felt good about the assignment we handed in this afternoon.
+65.54,69.36,Interviewer,behavior_routine: Tell me about how your daily academic routine and sleep have been going.
+72.06,76.84,Participant,I just feel completely exhausted and drained no matter how long I sleep.
+77.17,80.86,Interviewer,behavior_routine: What do you typically do to relax on the weekend with friends?
+83.18,87.56,Participant,Going for a morning run helps clear my head and gives me energy.
+88.06,91.03,Interviewer,behavior_routine: Tell me about how your daily academic routine and sleep have been going.
+93.76,98.63,Participant,I just feel completely exhausted and drained no matter how long I sleep.
+99.43,102.4,Interviewer,behavior_routine: What do you typically do to relax on the weekend with friends?
+105.28,109.27,Participant,I feel like I am letting everyone down constantly and cannot focus.
+109.69,113.94,Interviewer,behavior_routine: Tell me about how your daily academic routine and sleep have been going.
+118.02,124.74,Participant,Looking forward to the weekend break and getting some rest.
+125.19,127.81,Interviewer,distress_probe: How have you been coping when things feel overwhelming or stressful in the past?
+132.59,139.17,Participant,I felt good about the assignment we handed in this afternoon.
+139.75,142.34,Interviewer,"distress_probe: Have you been feeling down, depressed, or hopeless over the past couple of weeks?"
+146.78,153.97,Participant,I feel like I am letting everyone down constantly and cannot focus.
+154.66,157.8,Interviewer,distress_probe: How have you been coping when things feel overwhelming or stressful in the past?
+162.46,168.12,Participant,Everything feels like an overwhelming uphill battle right now.
+168.84,171.94,Interviewer,"distress_probe: Have you been feeling down, depressed, or hopeless over the past couple of weeks?"
+176.93,183.73,Participant,I have been avoiding messages from my family and staying by myself.
+184.31,188.75,Interviewer,distress_probe: How have you been coping when things feel overwhelming or stressful in the past?
+193.76,200.29,Participant,"Nothing feels engaging or meaningful lately, just going through motions."
+200.63,204.03,Interviewer,closing_reflection: What are your plans and goals for the rest of the semester?
+209.29,214.62,Participant,Everything feels like an overwhelming uphill battle right now.
+215.02,218.06,Interviewer,"closing_reflection: Thank you for sharing today, is there anything else on your mind?"
+223.41,230.96,Participant,Going for a morning run helps clear my head and gives me energy.
+231.55,235.39,Interviewer,closing_reflection: What are your plans and goals for the rest of the semester?
+240.81,246.53,Participant,"Nothing feels engaging or meaningful lately, just going through motions."
+247.0,251.41,Interviewer,"closing_reflection: Thank you for sharing today, is there anything else on your mind?"
+257.71,264.77,Participant,I had a productive study session with my friends at the library.
+265.45,269.78,Interviewer,closing_reflection: What are your plans and goals for the rest of the semester?
+275.85,283.95,Participant,I feel like I am letting everyone down constantly and cannot focus.
+284.71,288.31,Interviewer,"closing_reflection: Thank you for sharing today, is there anything else on your mind?"
+294.54,303.07,Participant,I struggled to get out of bed this morning and skipped morning lecture.
