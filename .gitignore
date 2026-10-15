@@ -34,3 +34,7 @@ coverage/
 # OS artifacts
 .DS_Store
 Thumbs.db
+data/processed/
+data/synthetic/
+experiments/
+
