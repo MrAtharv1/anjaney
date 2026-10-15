@@ -1,6 +1,6 @@
 study_title: "ANJANEY: Campus Mental-Health Screening Aid Gating Test"
 hypotheses:
-  rq1: "Within-session check-in drift differs significantly between high-risk (PHQ-8 >= 10) and low-risk participants after conditioning on interviewer prompt phase and relative session position."
+  rq1: "Within-session check-in deviation from personal warm-up baseline differs significantly between high-risk (PHQ-8 >= 10) and low-risk participants after cross-fitted conditioning on interviewer prompt phase and relative session position."
   rq3: "Adding personal-baseline deviation signals improves selective risk and conformal interval efficiency over population-only fusion."
 
 analysis_parameters:
@@ -15,7 +15,9 @@ analysis_parameters:
   position_bins: 5
   turn_index_bins: 5
   min_bin_count_n: 5
+  conditioner_cross_fit_folds: 5
   require_prompt_phase: true
+  prompt_phase_map_path: "configs/prompt_phase_map.json"
   late_session_cutoff: 0.5
   ewma_alpha: 0.3
   cusum_slack_k: 0.5
@@ -36,6 +38,6 @@ analysis_parameters:
   tost_ci_level: 0.90
 
 decision_rules:
-  supported: "One-sided permutation p < 0.05 (with (count+1)/(M+1) correction) AND 95% bootstrap CI of Cohen's d > 0 AND point Cohen's d >= minimum_effect_size_d"
+  supported: "One-sided permutation p < 0.05 (with (count+1)/(M+1) correction) AND 95% bootstrap CI of Cohen's d > 0 AND primary Cohen's d >= minimum_effect_size_d AND length_residualized_sensitivity_cohens_d >= minimum_effect_size_d"
   falsified: "TOST Equivalence test: Entire 90% bootstrap CI of Cohen's d lies strictly within [-equivalence_bound_d, +equivalence_bound_d]"
-  inconclusive: "Neither SUPPORTED nor FALSIFIED (insufficient statistical power to rule out minimum effect or establish equivalence)"
+  inconclusive: "Neither SUPPORTED nor FALSIFIED, OR downgraded from SUPPORTED because length_residualized_sensitivity_cohens_d < minimum_effect_size_d"
