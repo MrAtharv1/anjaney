@@ -17,6 +17,7 @@ class PersonalBaselineEngine:
         pca_components: int = 16,
         fusion_weight_text: float = 0.50,
         fusion_weight_timing: float = 0.50,
+        fusion_weight_acoustic: float = 0.0,
         ewma_alpha: float = 0.3,
         cusum_slack: float = 0.5,
         winsorize_cap: float = 5.0,
@@ -26,6 +27,7 @@ class PersonalBaselineEngine:
         self.pca_components = pca_components
         self.w_text = fusion_weight_text
         self.w_timing = fusion_weight_timing
+        self.w_acoustic = fusion_weight_acoustic
         self.ewma_alpha = ewma_alpha
         self.cusum_slack = cusum_slack
         self.winsorize_cap = winsorize_cap
@@ -33,6 +35,7 @@ class PersonalBaselineEngine:
         self.pca: PCA | None = None
         self.lw_cov: LedoitWolf | None = None
         self.timing_priors: dict[str, tuple[float, float]] = {}
+        self.acoustic_priors: dict[str, tuple[float, float]] = {}
         self.dev_scaler_stats: dict[str, tuple[float, float]] = {}
         self.missing_modality_window_drops: int = 0
 
@@ -41,6 +44,7 @@ class PersonalBaselineEngine:
         df_train_windows: pd.DataFrame,
         embed_cols: list[str],
         timing_cols: list[str],
+        acoustic_cols: list[str] | None = None,
     ) -> "PersonalBaselineEngine":
         if df_train_windows.empty:
             raise ValueError("Cannot fit baseline priors on empty training DataFrame.")
@@ -62,6 +66,24 @@ class PersonalBaselineEngine:
                 else float(np.std(vals) + 1e-3)
             )
             self.timing_priors[col] = (pop_mean, max(pooled_within_std, 1e-3))
+
+        # 1b. Pooled within-person acoustic priors
+        for col in acoustic_cols or []:
+            vals = df_train_windows[col].dropna().values
+            pop_mean = float(np.mean(vals)) if len(vals) > 0 else 0.0
+
+            within_person_vars = []
+            for _, grp in df_train_windows.groupby("participant_id"):
+                g_vals = grp[col].dropna().values
+                if len(g_vals) > 1:
+                    within_person_vars.append(np.var(g_vals, ddof=1))
+
+            pooled_within_std = (
+                float(np.sqrt(np.mean(within_person_vars)))
+                if within_person_vars
+                else float(np.std(vals) + 1e-3)
+            )
+            self.acoustic_priors[col] = (pop_mean, max(pooled_within_std, 1e-3))
 
         # 2. Fit PCA and Ledoit-Wolf on within-person centered embedding residuals
         if embed_cols:
@@ -98,6 +120,7 @@ class PersonalBaselineEngine:
         session_windows: pd.DataFrame,
         embed_cols: list[str],
         timing_cols: list[str],
+        acoustic_cols: list[str] | None = None,
     ) -> pd.DataFrame:
         df = session_windows.sort_values("window_idx").copy()
         n_windows = len(df)
@@ -105,11 +128,13 @@ class PersonalBaselineEngine:
         text_cos_devs = np.full(n_windows, np.nan)
         text_maha_devs = np.full(n_windows, np.nan)
         timing_devs = np.full(n_windows, np.nan)
+        acoustic_devs = np.full(n_windows, np.nan)
 
         if n_windows <= self.warmup_k:
             df["text_deviation"] = text_cos_devs
             df["maha_deviation"] = text_maha_devs
             df["timing_deviation"] = timing_devs
+            df["acoustic_deviation"] = acoustic_devs
             return df
 
         warmup_df = df.iloc[: self.warmup_k]
@@ -174,13 +199,47 @@ class PersonalBaselineEngine:
         else:
             timing_devs[self.warmup_k :] = 0.0
 
+        # 3. Acoustic warm-up baseline with Empirical-Bayes shrinkage
+        if acoustic_cols:
+            warmup_acoustic_stats: dict[str, tuple[float, float]] = {}
+            for col in acoustic_cols:
+                vals = warmup_df[col].dropna().to_numpy(dtype=float)
+                pop_mean, pop_within_std = self.acoustic_priors.get(col, (0.0, 1.0))
+
+                if len(vals) == 0:
+                    warmup_acoustic_stats[col] = (pop_mean, pop_within_std)
+                    continue
+
+                n_i = len(vals)
+                med_i = float(np.median(vals))
+                mad_i = float(np.median(np.abs(vals - med_i))) * 1.4826
+
+                shrunk_loc = (n_i * med_i + self.eb_k * pop_mean) / (n_i + self.eb_k)
+                shrunk_scale = (n_i * mad_i + self.eb_k * pop_within_std) / (n_i + self.eb_k)
+                safe_scale = max(shrunk_scale, 0.20 * pop_within_std, 1e-4)
+                warmup_acoustic_stats[col] = (shrunk_loc, safe_scale)
+
+            post_acoustic_z = []
+            for col in acoustic_cols:
+                mu, sigma = warmup_acoustic_stats[col]
+                col_vals = post_df[col].to_numpy(dtype=float)
+                z = np.minimum(np.abs((col_vals - mu) / sigma), self.winsorize_cap)
+                post_acoustic_z.append(z)
+
+            z_stack = np.vstack(post_acoustic_z)
+            with np.errstate(invalid="ignore"):
+                acoustic_devs[self.warmup_k :] = np.nanmean(z_stack, axis=0)
+        else:
+            acoustic_devs[self.warmup_k :] = 0.0
+
         df["text_deviation"] = text_cos_devs
         df["maha_deviation"] = text_maha_devs
         df["timing_deviation"] = timing_devs
+        df["acoustic_deviation"] = acoustic_devs
         return df
 
     def fit_deviation_standardizer(self, df_train_devs: pd.DataFrame) -> "PersonalBaselineEngine":
-        for col in ["text_deviation", "maha_deviation", "timing_deviation"]:
+        for col in ["text_deviation", "maha_deviation", "timing_deviation", "acoustic_deviation"]:
             if col in df_train_devs.columns:
                 vals = df_train_devs[col].dropna().to_numpy(dtype=float)
                 if len(vals) > 1:
@@ -193,7 +252,11 @@ class PersonalBaselineEngine:
         return self
 
     def apply_standardized_fusion(
-        self, df_devs: pd.DataFrame, has_text_cols: bool = True, has_timing_cols: bool = True
+        self,
+        df_devs: pd.DataFrame,
+        has_text_cols: bool = True,
+        has_timing_cols: bool = True,
+        has_acoustic_cols: bool = False,
     ) -> pd.DataFrame:
         df = df_devs.copy()
 
@@ -206,16 +269,22 @@ class PersonalBaselineEngine:
         z_text = _std_col("text_deviation")
         z_maha = _std_col("maha_deviation")
         z_time = _std_col("timing_deviation")
+        z_ac = _std_col("acoustic_deviation")
 
         df["text_dev_z"] = z_text
         df["maha_dev_z"] = z_maha
         df["timing_dev_z"] = z_time
+        df["acoustic_dev_z"] = z_ac
 
         post_mask = df["window_idx"].to_numpy() >= self.warmup_k
 
-        if has_text_cols and has_timing_cols:
+        if has_text_cols and has_timing_cols and has_acoustic_cols and self.w_acoustic > 0.0:
+            combined = self.w_text * z_maha + self.w_timing * z_time + self.w_acoustic * z_ac
+            dropped_mask = post_mask & (np.isnan(z_maha) | np.isnan(z_time) | np.isnan(z_ac))
+            self.missing_modality_window_drops = int(np.sum(dropped_mask))
+            df["combined_deviation"] = combined
+        elif has_text_cols and has_timing_cols:
             combined = self.w_text * z_maha + self.w_timing * z_time
-            # Count post-warmup windows dropped because one modality was NaN
             dropped_mask = post_mask & (np.isnan(z_maha) | np.isnan(z_time))
             self.missing_modality_window_drops = int(np.sum(dropped_mask))
             df["combined_deviation"] = combined

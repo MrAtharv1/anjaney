@@ -96,13 +96,11 @@ class TimingFeatureExtractor:
                 if len(valid_latencies) > 1
                 else 0.0
             )
-            lat_cv = std_lat / (mean_lat + 1e-4)
         else:
             mean_lat = 0.0
             median_lat = 0.0
             std_lat = 0.0
             iqr_lat = 0.0
-            lat_cv = 0.0
 
         # Rhythm: turns per minute across window span
         window_duration = max(1.0, float(window_row.get("end_s", 0) - window_row.get("start_s", 0)))
@@ -141,7 +139,6 @@ class TimingFeatureExtractor:
             "timing_median_latency": 0.0,
             "timing_std_latency": 0.0,
             "timing_iqr_latency": 0.0,
-            "timing_latency_cv": 0.0,
             "timing_mean_pause": 0.0,
             "timing_speech_rate_wps": 0.0,
             "timing_turns_per_minute": 0.0,

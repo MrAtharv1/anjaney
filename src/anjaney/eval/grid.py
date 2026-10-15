@@ -42,11 +42,25 @@ class EvaluationGridRunner:
             "lexical_only": FeatureRegistry.get_feature_columns(self.df_features, ["lexical"])[
                 "lexical"
             ],
-            "text_plus_timing": (
+        }
+
+        cols_acoustic = FeatureRegistry.get_feature_columns(self.df_features, ["acoustic"]).get(
+            "acoustic", []
+        )
+        if cols_acoustic:
+            modality_groups["acoustic_only"] = cols_acoustic
+
+        modality_groups["text_plus_timing"] = (
+            FeatureRegistry.get_feature_columns(self.df_features, ["text_embed"])["text_embed"]
+            + FeatureRegistry.get_feature_columns(self.df_features, ["timing"])["timing"]
+        )
+
+        if cols_acoustic:
+            modality_groups["text_plus_timing_plus_acoustic"] = (
                 FeatureRegistry.get_feature_columns(self.df_features, ["text_embed"])["text_embed"]
                 + FeatureRegistry.get_feature_columns(self.df_features, ["timing"])["timing"]
-            ),
-        }
+                + cols_acoustic
+            )
 
         heads = ["ridge", "lightgbm"]
         grid_results: dict[str, Any] = {}

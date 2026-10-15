@@ -2,18 +2,20 @@
 
 import pandas as pd
 
+from anjaney.features.acoustic import AcousticFeatureExtractor
 from anjaney.features.lexical import LexicalExtractor
 from anjaney.features.text_embed import TextEmbeddingExtractor
 from anjaney.features.timing import TimingFeatureExtractor
 
 
 class FeatureRegistry:
-    FEATURE_GROUPS = ["text_embed", "timing", "lexical"]
+    FEATURE_GROUPS = ["text_embed", "timing", "lexical", "acoustic"]
 
     def __init__(self, embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"):
         self.text_extractor = TextEmbeddingExtractor(model_name=embedding_model)
         self.timing_extractor = TimingFeatureExtractor()
         self.lexical_extractor = LexicalExtractor()
+        self.acoustic_extractor = AcousticFeatureExtractor()
 
     def extract_features(
         self,
@@ -57,6 +59,11 @@ class FeatureRegistry:
             df_lexical = pd.DataFrame(lexical_rows, index=df_windows.index)
             chunks.append(df_lexical)
 
+        # 4. Acoustic Features
+        if "acoustic" in selected_groups:
+            df_acoustic = self.acoustic_extractor.extract_features(df_windows)
+            chunks.append(df_acoustic)
+
         return pd.concat(chunks, axis=1)
 
     @classmethod
@@ -72,5 +79,7 @@ class FeatureRegistry:
             col_map["timing"] = [c for c in df.columns if c.startswith("timing_")]
         if "lexical" in selected_groups:
             col_map["lexical"] = [c for c in df.columns if c.startswith("lex_")]
+        if "acoustic" in selected_groups:
+            col_map["acoustic"] = [c for c in df.columns if c.startswith("acoustic_")]
 
         return col_map

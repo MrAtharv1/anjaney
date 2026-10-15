@@ -25,7 +25,7 @@ def generate_latex_table(grid_data: dict[str, Any]) -> str:
             rmse = f"{data['metrics']['rmse']['point']:.2f} [{data['metrics']['rmse']['ci_lower']:.2f}, {data['metrics']['rmse']['ci_upper']:.2f}]"
             auroc = f"{data['metrics']['auroc']['point']:.2f} [{data['metrics']['auroc']['ci_lower']:.2f}, {data['metrics']['auroc']['ci_upper']:.2f}]"
             aurc = f"{data['conformal']['split']['aurc']:.3f}"
-            status = "CONFIRMATORY" if "plus" in mod else "EXPLORATORY"
+            status = "CONFIRMATORY" if mod == "text_plus_timing" else "EXPLORATORY"
             latex += f"{clean_mod} & {head.upper()} & {rmse} & {auroc} & {aurc} & {status} \\\\\n"
 
     latex += """\\bottomrule
@@ -58,7 +58,7 @@ def generate_markdown_report(
             rmse_str = f"{data['metrics']['rmse']['point']:.2f} [{data['metrics']['rmse']['ci_lower']:.2f}, {data['metrics']['rmse']['ci_upper']:.2f}]"
             auroc_str = f"{data['metrics']['auroc']['point']:.2f} [{data['metrics']['auroc']['ci_lower']:.2f}, {data['metrics']['auroc']['ci_upper']:.2f}]"
             aurc_str = f"{data['conformal']['split']['aurc']:.3f}"
-            status = "CONFIRMATORY" if "plus" in mod else "EXPLORATORY"
+            status = "CONFIRMATORY" if mod == "text_plus_timing" else "EXPLORATORY"
             md += f"| `{mod}` | `{head}` | {rmse_str} | {auroc_str} | {aurc_str} | {status} |\n"
 
     md += """

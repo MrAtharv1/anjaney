@@ -90,3 +90,70 @@ def test_registry_column_partitioning():
     assert len(timing_cols.intersection(lexical_cols)) == 0
     assert len(timing_cols) > 0
     assert len(lexical_cols) > 0
+
+
+def test_acoustic_feature_extractor_vuv_and_scrub_masking():
+    from anjaney.features.acoustic import AcousticFeatureExtractor, compute_window_acoustics
+
+    # 10 frames total:
+    # Frame 0-1: scrubbed (all zeros across all 74 cols)
+    # Frame 2-4: unvoiced (VUV=0, F0=0, NAQ=0.99, MCEP_1=-10.0, F1=999.0)
+    # Frame 5-9: voiced (VUV=1, F0=120.0, NAQ=0.15, QOQ=0.5, MCEP_1=-5.0, F1=500.0, F2=1500.0)
+    n_frames = 10
+    cov = np.zeros((n_frames, 74))
+    form = np.zeros((n_frames, 5))
+
+    # Frames 2-4 (unvoiced):
+    cov[2:5, 0] = 0.0
+    cov[2:5, 1] = 0.0
+    cov[2:5, 2] = 0.99
+    cov[2:5, 3] = 0.88
+    cov[2:5, 11] = -10.0
+    form[2:5, 0] = 999.0
+
+    # Frames 5-9 (voiced):
+    cov[5:10, 0] = 120.0
+    cov[5:10, 1] = 1.0
+    cov[5:10, 2] = 0.15
+    cov[5:10, 3] = 0.50
+    cov[5:10, 11] = -5.0
+    form[5:10, 0] = 500.0
+    form[5:10, 1] = 1500.0
+
+    # Valid non-scrubbed frames: frames 2 to 9 (8 frames).
+    # Voiced frames: frames 5 to 9 (5 frames).
+    # Voiced fraction: 5 / 8 = 0.625
+    feats = compute_window_acoustics(cov, form)
+
+    assert np.isclose(feats["acoustic_voiced_fraction"], 5.0 / 8.0)
+    assert np.isclose(feats["acoustic_f0_mean"], 120.0)
+    assert np.isclose(feats["acoustic_naq_mean"], 0.15)
+    assert np.isclose(feats["acoustic_qoq_mean"], 0.50)
+    assert np.isclose(feats["acoustic_f1_mean"], 500.0)
+    assert np.isclose(feats["acoustic_f2_mean"], 1500.0)
+    assert feats["acoustic_f0_std"] == 0.0
+
+    # Test registry extraction
+    df_dummy = pd.DataFrame(
+        [
+            {
+                "participant_id": "P_01",
+                "window_idx": 0,
+                "text": "test",
+                "turn_starts": [0.0],
+                "turn_ends": [1.0],
+                "prev_interviewer_ends": [-1.0],
+                "n_tokens": 1,
+                "start_s": 0.0,
+                "end_s": 1.0,
+                "rel_position": 0.0,
+            }
+        ]
+    )
+    registry = FeatureRegistry()
+    df_extracted = registry.extract_features(df_dummy, groups=["acoustic"])
+    cols = FeatureRegistry.get_feature_columns(df_extracted, groups=["acoustic"])
+    assert len(cols["acoustic"]) == 16
+    for c in AcousticFeatureExtractor.FEATURE_COLUMNS:
+        assert c in cols["acoustic"]
+        assert c in df_extracted.columns

@@ -30,9 +30,7 @@ class ParticipantAggregator:
                 mean_feats = np.nanmean(feat_vals, axis=0)
                 mean_feats = np.nan_to_num(mean_feats, nan=0.0)
                 std_feats = (
-                    np.nanstd(feat_vals, axis=0)
-                    if len(group) > 1
-                    else np.zeros_like(mean_feats)
+                    np.nanstd(feat_vals, axis=0) if len(group) > 1 else np.zeros_like(mean_feats)
                 )
                 std_feats = np.nan_to_num(std_feats, nan=0.0)
 
