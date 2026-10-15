@@ -25,13 +25,26 @@ HIGH_RISK_TEMPLATES = [
     "I feel like I am letting everyone down constantly and cannot focus.",
 ]
 
-INTERVIEWER_PROMPTS = [
-    "How have you been feeling over the past couple of weeks?",
-    "Tell me about how your academic routine has been going.",
-    "How are things with your friends and social connections?",
-    "What do you typically do when you start feeling stressed?",
-    "How would you describe your sleep and daily energy levels?",
-]
+# Structured into the 4 canonical DAIC-WOZ script phases for prompt_phase conditioning:
+# Phase 0: Rapport | Phase 1: Behavior/Routine | Phase 2: Distress Probe | Phase 3: Closing
+SCRIPT_PHASE_PROMPTS: dict[int, list[str]] = {
+    0: [
+        "rapport_intro: Where are you from originally and how is campus life?",
+        "rapport_intro: Tell me a little bit about yourself and your major.",
+    ],
+    1: [
+        "behavior_routine: Tell me about how your daily academic routine and sleep have been going.",
+        "behavior_routine: What do you typically do to relax on the weekend with friends?",
+    ],
+    2: [
+        "distress_probe: Have you been feeling down, depressed, or hopeless over the past couple of weeks?",
+        "distress_probe: How have you been coping when things feel overwhelming or stressful in the past?",
+    ],
+    3: [
+        "closing_reflection: What are your plans and goals for the rest of the semester?",
+        "closing_reflection: Thank you for sharing today, is there anything else on your mind?",
+    ],
+}
 
 
 class SyntheticCohortGenerator:
@@ -77,8 +90,12 @@ class SyntheticCohortGenerator:
             current_time = 2.0
 
             for t_idx in range(n_turns):
-                # 1. Interviewer prompt
-                prompt_text = INTERVIEWER_PROMPTS[t_idx % len(INTERVIEWER_PROMPTS)]
+                position_ratio = t_idx / max(1, n_turns - 1)
+                phase_id = min(3, int(position_ratio * 4))
+
+                # 1. Interviewer prompt (used ONLY for script-phase conditioning, never embedded)
+                phase_prompts = SCRIPT_PHASE_PROMPTS[phase_id]
+                prompt_text = phase_prompts[t_idx % len(phase_prompts)]
                 prompt_duration = round(random.uniform(2.5, 4.5), 2)
                 turns.append(
                     Turn(
@@ -90,17 +107,16 @@ class SyntheticCohortGenerator:
                 )
                 current_time += prompt_duration
 
-                # 2. Response latency
+                # 2. Response latency (with shared progression fatigue + optional high-risk drift)
                 base_latency = 1.2 if not is_high_risk else 2.8
-                # Late-session fatigue drift
-                position_ratio = t_idx / n_turns
                 fatigue_latency = position_ratio * 0.8
                 extra_drift = (
                     (position_ratio * 1.5) if (is_high_risk and self.extra_high_risk_drift) else 0.0
                 )
 
                 latency = max(
-                    0.4, base_latency + fatigue_latency + extra_drift + random.gauss(0, 0.3)
+                    0.4,
+                    base_latency + fatigue_latency + extra_drift + random.gauss(0, 0.3),
                 )
                 current_time += latency
 
@@ -152,11 +168,23 @@ class SyntheticCohortGenerator:
         with open(labels_file, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
             writer.writerow(
-                ["Participant_ID", "PHQ8_Score", "PHQ8_Binary", "Gender", "official_split"]
+                [
+                    "Participant_ID",
+                    "PHQ8_Score",
+                    "PHQ8_Binary",
+                    "Gender",
+                    "official_split",
+                ]
             )
             for s in sessions:
                 writer.writerow(
-                    [s.participant_id, s.phq8_score, s.phq8_binary, s.gender, s.official_split]
+                    [
+                        s.participant_id,
+                        s.phq8_score,
+                        s.phq8_binary,
+                        s.gender,
+                        s.official_split,
+                    ]
                 )
 
         # Export per-participant transcript files

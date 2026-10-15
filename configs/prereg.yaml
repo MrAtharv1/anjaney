@@ -1,32 +1,41 @@
 study_title: "ANJANEY: Campus Mental-Health Screening Aid Gating Test"
 hypotheses:
-  rq1: "Within-session check-in drift differs significantly between high-risk (PHQ-8 >= 10) and low-risk participants after position and script-phase conditioning."
+  rq1: "Within-session check-in drift differs significantly between high-risk (PHQ-8 >= 10) and low-risk participants after conditioning on interviewer prompt phase and relative session position."
   rq3: "Adding personal-baseline deviation signals improves selective risk and conformal interval efficiency over population-only fusion."
 
 analysis_parameters:
-  primary_metric_rq1: "participant_level_late_session_conditioned_drift"
+  primary_metric_rq1: "participant_level_late_session_conditioned_combined_deviation"
   risk_split_threshold: 10.0
   warmup_windows_k: 3
+  warmup_k_sensitivity_grid: [3, 5, 8]
   empirical_bayes_k: 2.0
   pca_components_maha: 16
+  fusion_weight_text: 0.50
+  fusion_weight_timing: 0.50
   position_bins: 5
   turn_index_bins: 5
   min_bin_count_n: 5
+  require_prompt_phase: true
   late_session_cutoff: 0.5
   ewma_alpha: 0.3
   cusum_slack_k: 0.5
   z_score_winsorize_cap: 5.0
   alpha: 0.10
   sigma_floor_fraction: 0.20
+  sigma_floor_abs_min: 0.25
   cqr_pca_components: 10
+  cqr_inner_quantile_low: 0.10
+  cqr_inner_quantile_high: 0.90
   conformal_max_width: 8.0
   conformal_margin: 0.5
   n_permutations: 10000
   n_bootstrap: 2000
+  figure_bootstrap_n: 500
   minimum_effect_size_d: 0.30
-  equivalence_bound_delta: 0.15
+  equivalence_bound_d: 0.30
+  tost_ci_level: 0.90
 
 decision_rules:
-  supported: "One-sided permutation p < 0.05 (with (count+1)/(M+1) correction) AND bootstrap 95% CI > 0 AND Cohen's d >= 0.30"
-  falsified: "Equivalence test: Entire bootstrap 95% CI of group difference lies strictly within [-equivalence_bound_delta, +equivalence_bound_delta]"
-  inconclusive: "Neither SUPPORTED nor FALSIFIED (insufficient statistical power to rule out effect or equivalence)"
+  supported: "One-sided permutation p < 0.05 (with (count+1)/(M+1) correction) AND 95% bootstrap CI of Cohen's d > 0 AND point Cohen's d >= minimum_effect_size_d"
+  falsified: "TOST Equivalence test: Entire 90% bootstrap CI of Cohen's d lies strictly within [-equivalence_bound_d, +equivalence_bound_d]"
+  inconclusive: "Neither SUPPORTED nor FALSIFIED (insufficient statistical power to rule out minimum effect or establish equivalence)"

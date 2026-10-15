@@ -1,107 +1,150 @@
-"""Check-in window builder aggregating participant turns and preserving content-free timing arrays."""
+"""Sliding check-in window segmentation with interviewer script-phase extraction and zero leakage."""
 
-from typing import Any
-
+import numpy as np
 import pandas as pd
 
 from anjaney.data.schemas import Session, SpeakerRole
+from anjaney.preprocess.cleaner import TranscriptCleaner
 
 
 class WindowBuilder:
-    """Chunks participant turns into fixed-count check-in windows."""
+    """Segments participant turns into non-overlapping check-in windows.
 
-    def __init__(self, window_size: int = 5, min_tokens: int = 8):
+    Per AGENTS.md Rule 5 and Burdisso et al. (2024):
+    Interviewer prompts are NEVER included in text features, but the preceding
+    interviewer prompt identity is used to derive `prompt_phase` for script conditioning.
+    """
+
+    def __init__(self, window_size: int = 5, min_turns_for_valid: int = 3):
         self.window_size = window_size
-        self.min_tokens = min_tokens
+        self.min_turns = min_turns_for_valid
 
-    def build_session_windows(self, session: Session) -> list[dict[str, Any]]:
-        """Extract participant check-in windows along with prior interviewer stops."""
-        turns = session.turns
-        if not turns:
-            return []
+    @staticmethod
+    def _classify_interviewer_prompt_phase(prompt_text: str, rel_pos: float) -> int:
+        """Map preceding interviewer prompt to canonical DAIC script phase (0..3)."""
+        txt = prompt_text.lower()
+        if any(
+            w in txt
+            for w in (
+                "rapport_intro",
+                "where are you from",
+                "originally",
+                "about yourself",
+            )
+        ):
+            return 0
+        if any(
+            w in txt
+            for w in (
+                "behavior_routine",
+                "academic routine",
+                "daily",
+                "sleep",
+                "relax",
+                "weekend",
+            )
+        ):
+            return 1
+        if any(
+            w in txt
+            for w in (
+                "distress_probe",
+                "depressed",
+                "hopeless",
+                "down",
+                "overwhelming",
+                "stressful",
+                "past",
+            )
+        ):
+            return 2
+        if any(
+            w in txt
+            for w in (
+                "closing_reflection",
+                "plans",
+                "goals",
+                "thank you",
+                "anything else",
+            )
+        ):
+            return 3
+        return min(3, int(np.clip(rel_pos, 0.0, 0.999) * 4))
 
-        # Find preceding interviewer stop time for every participant turn
-        participant_turn_data: list[dict[str, Any]] = []
+    def build_session_windows(self, session: Session) -> list[dict]:
+        cleaned = TranscriptCleaner.clean_session(session)
+
+        # Pair each participant turn with its immediately preceding interviewer prompt
+        part_turns = []
+        part_latencies = []
+        part_prompt_texts = []
+
         last_interviewer_end: float | None = None
+        last_interviewer_text: str = ""
 
-        for turn in turns:
-            if turn.speaker == SpeakerRole.INTERVIEWER:
-                last_interviewer_end = turn.end_s
-            elif turn.speaker == SpeakerRole.PARTICIPANT:
-                participant_turn_data.append(
-                    {
-                        "start_s": turn.start_s,
-                        "end_s": turn.end_s,
-                        "duration_s": turn.duration_s,
-                        "text": turn.text,
-                        "prev_interviewer_end": last_interviewer_end,
-                    }
-                )
+        for t in cleaned.turns:
+            if t.speaker == SpeakerRole.INTERVIEWER:
+                last_interviewer_end = t.end_s
+                last_interviewer_text = t.text
+            elif t.speaker == SpeakerRole.PARTICIPANT:
+                part_turns.append(t)
+                if last_interviewer_end is not None:
+                    lat = max(0.0, t.start_s - last_interviewer_end)
+                else:
+                    lat = np.nan
+                part_latencies.append(lat)
+                part_prompt_texts.append(last_interviewer_text)
 
-        if not participant_turn_data:
+        n_total = len(part_turns)
+        if n_total == 0:
             return []
 
-        # Chunk into windows of window_size participant turns
-        chunks: list[list[dict[str, Any]]] = []
-        for i in range(0, len(participant_turn_data), self.window_size):
-            chunk = participant_turn_data[i : i + self.window_size]
-            chunks.append(chunk)
+        windows = []
+        n_windows = int(np.ceil(n_total / self.window_size))
 
-        n_windows = len(chunks)
-        window_records: list[dict[str, Any]] = []
+        for w_idx in range(n_windows):
+            start_i = w_idx * self.window_size
+            end_i = min(start_i + self.window_size, n_total)
+            chunk = part_turns[start_i:end_i]
+            chunk_lats = part_latencies[start_i:end_i]
+            chunk_prompts = part_prompt_texts[start_i:end_i]
 
-        for w_idx, chunk in enumerate(chunks):
-            concatenated_text = " ".join(item["text"] for item in chunk)
-            tokens = concatenated_text.split()
-            n_tokens = len(tokens)
+            combined_text = " ".join(t.text for t in chunk).strip()
+            tokens = combined_text.split()
+            durations = [t.duration for t in chunk]
+            valid_lats = [val for val in chunk_lats if not np.isnan(val)]
 
-            start_s = chunk[0]["start_s"]
-            end_s = chunk[-1]["end_s"]
-            rel_position = round(w_idx / max(1, n_windows - 1), 4) if n_windows > 1 else 0.0
+            rel_pos = float(w_idx / max(1, n_windows - 1)) if n_windows > 1 else 0.0
+            lead_prompt = chunk_prompts[0] if chunk_prompts else ""
+            prompt_phase = self._classify_interviewer_prompt_phase(lead_prompt, rel_pos)
 
-            turn_starts = [item["start_s"] for item in chunk]
-            turn_ends = [item["end_s"] for item in chunk]
-            prev_interviewer_ends = [
-                -1.0 if item["prev_interviewer_end"] is None else item["prev_interviewer_end"]
-                for item in chunk
-            ]
-            latency_missing = [item["prev_interviewer_end"] is None for item in chunk]
-
-            window_records.append(
+            windows.append(
                 {
-                    "participant_id": session.participant_id,
+                    "participant_id": cleaned.participant_id,
+                    "official_split": cleaned.official_split,
+                    "phq8_score": cleaned.phq8_score,
+                    "phq8_binary": cleaned.phq8_binary,
+                    "gender": cleaned.gender,
                     "window_idx": w_idx,
-                    "n_windows_for_participant": n_windows,
-                    "rel_position": rel_position,
-                    "start_s": start_s,
-                    "end_s": end_s,
-                    "text": concatenated_text,
-                    "n_tokens": n_tokens,
-                    "is_short": n_tokens < self.min_tokens,
-                    "turn_starts": turn_starts,
-                    "turn_ends": turn_ends,
-                    "prev_interviewer_ends": prev_interviewer_ends,
-                    "latency_missing": latency_missing,
-                    "phq8_score": session.phq8_score,
-                    "phq8_binary": session.phq8_binary,
-                    "gender": session.gender,
-                    "official_split": session.official_split,
-                    "is_synthetic": session.is_synthetic,
+                    "rel_position": rel_pos,
+                    "prompt_phase": int(prompt_phase),
+                    "n_turns_in_window": len(chunk),
+                    "is_short_window": len(chunk) < self.min_turns,
+                    "text": combined_text,
+                    "n_tokens": len(tokens),
+                    "window_start_time": chunk[0].start_s,
+                    "window_stop_time": chunk[-1].end_s,
+                    "mean_turn_duration": float(np.mean(durations)) if durations else 0.0,
+                    "total_speech_time": float(np.sum(durations)) if durations else 0.0,
+                    "mean_response_latency": float(np.mean(valid_lats)) if valid_lats else np.nan,
+                    "max_response_latency": float(np.max(valid_lats)) if valid_lats else np.nan,
                 }
             )
 
-        return window_records
+        return windows
 
     def build_dataset_dataframe(self, sessions: list[Session]) -> pd.DataFrame:
-        """Process multiple sessions into a unified DataFrame."""
-        all_windows: list[dict[str, Any]] = []
+        all_rows = []
         for s in sessions:
-            all_windows.extend(self.build_session_windows(s))
-
-        if not all_windows:
-            return pd.DataFrame()
-
-        df = pd.DataFrame(all_windows)
-        # Enforce deterministic row sorting
-        df = df.sort_values(by=["participant_id", "window_idx"]).reset_index(drop=True)
-        return df
+            all_rows.extend(self.build_session_windows(s))
+        return pd.DataFrame(all_rows)

@@ -1,0 +1,40 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: anjaney-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - ANJANEY_API_APP_NAME=ANJANEY Campus Wellness API
+      - ANJANEY_API_DATABASE_URL=sqlite+aiosqlite:///./anjaney_campus.db
+      - ANJANEY_API_K_ANONYMITY_MIN=5
+    volumes:
+      - ./data/processed/bundle:/app/data/processed/bundle:ro
+      - ./experiments:/app/experiments:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: anjaney-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 15s
+      timeout: 5s
+      retries: 3

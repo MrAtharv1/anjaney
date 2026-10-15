@@ -1,18 +1,17 @@
-"""Split-conformal prediction intervals, adaptive scoring, and abstention policies."""
+"""Conformal prediction engines and three-way triage policies."""
 
-from anjaney.conformal.classification import ConformalClassifier
 from anjaney.conformal.cqr import ConformalQuantileRegressor
-from anjaney.conformal.cross import CrossConformalRegressor
+from anjaney.conformal.cross import CrossConformalCVPlus, CrossConformalRegressor
 from anjaney.conformal.normalized import DifficultyNormalizedConformal
-from anjaney.conformal.policy import ConformalTriagePolicy, sweep_operating_points
+from anjaney.conformal.policy import ConformalTriagePolicy, TriageDecision
 from anjaney.conformal.split import SplitConformalRegressor
 
 __all__ = [
-    "ConformalClassifier",
     "ConformalQuantileRegressor",
     "ConformalTriagePolicy",
+    "CrossConformalCVPlus",
     "CrossConformalRegressor",
     "DifficultyNormalizedConformal",
     "SplitConformalRegressor",
-    "sweep_operating_points",
+    "TriageDecision",
 ]
