@@ -111,14 +111,15 @@ def export_model_bundle(
             ]
         )
         pt_pred = float(ridge.intercept_ + np.dot(scaled_vec, ridge.coef_))
+        clamped_pt = float(np.clip(pt_pred, 0.0, 24.0))
 
         fixtures.append(
             {
                 "fixture_id": f"fixture_{i:02d}",
                 "input_vector": raw_vec,
-                "expected_point_score": round(pt_pred, 4),
-                "expected_lower": round(pt_pred - q_hat, 4),
-                "expected_upper": round(pt_pred + q_hat, 4),
+                "expected_point_score": round(clamped_pt, 4),
+                "expected_lower": round(max(0.0, min(24.0, clamped_pt - q_hat)), 4),
+                "expected_upper": round(max(0.0, min(24.0, clamped_pt + q_hat)), 4),
             }
         )
 

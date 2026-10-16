@@ -2,21 +2,21 @@
 
 > ⚠️ **SIMULATION NOTICE**: Measurements captured in a local environment simulating mobile CPU constraints.
 
-- **Peak Host Memory (RSS):** 200.9 MB
+- **Peak Host Memory (RSS):** 93.3 MB
 - **Model Architecture:** `all-MiniLM-L6-v2` (6-layer, 384 hidden dim, dynamic INT8)
 
 ## Latency Profiles (ms)
 | Sequence Length (Tokens) | CPU Threads | Latency p50 (ms) | Latency p95 (ms) | Latency p99 (ms) |
 | :--- | :--- | :--- | :--- | :--- |
-| 32 | 1 | 3.14 ms | 4.22 ms | 6.52 ms |
-| 32 | 2 | 3.14 ms | 3.69 ms | 5.03 ms |
-| 32 | 4 | 3.15 ms | 3.49 ms | 5.10 ms |
-| 64 | 1 | 4.00 ms | 4.38 ms | 4.57 ms |
-| 64 | 2 | 3.38 ms | 4.82 ms | 5.25 ms |
-| 64 | 4 | 4.10 ms | 5.51 ms | 5.60 ms |
-| 128 | 1 | 6.03 ms | 8.40 ms | 9.39 ms |
-| 128 | 2 | 5.05 ms | 6.69 ms | 7.08 ms |
-| 128 | 4 | 4.06 ms | 4.86 ms | 9.18 ms |
-| 256 | 1 | 8.54 ms | 9.58 ms | 9.71 ms |
-| 256 | 2 | 6.49 ms | 7.26 ms | 7.56 ms |
-| 256 | 4 | 5.44 ms | 7.43 ms | 8.22 ms |
+| 32 | 1 | 3.04 ms | 4.06 ms | 6.46 ms |
+| 32 | 2 | 3.04 ms | 3.45 ms | 3.53 ms |
+| 32 | 4 | 3.05 ms | 3.20 ms | 3.28 ms |
+| 64 | 1 | 4.03 ms | 4.26 ms | 4.30 ms |
+| 64 | 2 | 3.28 ms | 3.68 ms | 4.27 ms |
+| 64 | 4 | 3.24 ms | 3.42 ms | 3.50 ms |
+| 128 | 1 | 5.38 ms | 5.66 ms | 5.70 ms |
+| 128 | 2 | 4.60 ms | 4.76 ms | 4.94 ms |
+| 128 | 4 | 3.99 ms | 4.08 ms | 4.18 ms |
+| 256 | 1 | 8.09 ms | 9.43 ms | 9.94 ms |
+| 256 | 2 | 5.97 ms | 6.66 ms | 7.05 ms |
+| 256 | 4 | 5.14 ms | 5.74 ms | 6.01 ms |
