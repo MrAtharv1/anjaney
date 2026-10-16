@@ -1,0 +1,16 @@
+\begin{table}[t]
+\centering
+\small
+\caption{Set-Valued Conformal Classification at $\alpha = 0.20$ (Validation Folds, $N=141$)}
+\label{tab:conformal_classification}
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Method} & \textbf{Nominal Cov.} & \textbf{Empirical Cov.} & \textbf{Throughput (Singletons)} & \textbf{Abstention Rate} & \textbf{Singleton Error [95\% CI]} & \textbf{Status} \\
+\midrule
+LAC & 80.0\% & 89.4\% & 63.1\% (89/141) & 36.9\% (52/141) & 16.9\% [10.5\%, 26.0\%] & VALID \\
+APS (Det.)$^*$ & 80.0\% & 100.0\% & 0.0\% (0/141) & 100.0\% (141/141) & -- ($N=0$) & DEGENERATE \\
+\bottomrule
+\end{tabular}
+\\[2pt]
+\footnotesize{$^*$Deterministic APS escalates 100\% of cases due to non-zero base error, yielding zero autonomous throughput.}
+\end{table}

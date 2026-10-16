@@ -1,0 +1,16 @@
+\begin{table}[t]
+\centering
+\small
+\caption{Clinical Economic Cost Sweep Compared to Default Escalation Baseline}
+\label{tab:cost_sweep}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Scenario} & \textbf{Cost Weights ($C_{\text{FN}} : C_{\text{FP}} : C_{\text{abs}}$)} & \textbf{Policy Cost} & \textbf{Escalate-All Baseline} & \textbf{Net Delta} \\
+\midrule
+Standard Clinical & 5.0 : 1.0 : 0.5 & 0.489 & 0.500 & -0.011 \\
+Equal Weights & 1.0 : 1.0 : 0.5 & 0.461 & 0.500 & -0.039 \\
+High Safety & 10.0 : 1.0 : 0.5 & 0.500 & 0.500 & 0.000 \\
+Low Abstain Cost & 5.0 : 1.0 : 0.1 & 0.098 & 0.100 & -0.002 \\
+\bottomrule
+\end{tabular}
+\end{table}

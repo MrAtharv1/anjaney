@@ -1,0 +1,19 @@
+\begin{table}[t]
+\centering
+\small
+\caption{Dataset Partitioning, Demographics, and Window Counts}
+\label{tab:dataset_splits}
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Partition} & \textbf{Sessions ($N$)} & \textbf{Female (\%)} & \textbf{Male (\%)} & \textbf{PHQ-8 $\ge 10$ (\%)} & \textbf{Windows} & \textbf{Mean W/P} \\
+\midrule
+Train & 107 & 63 (58.9\%) & 44 (41.1\%) & 30 (28.0\%) & 3,323 & 31.1 \\
+Dev (Disk)$^*$ & 34 & 16 (47.1\%) & 18 (52.9\%) & 11 (32.4\%) & 1,251 & 36.8 \\
+Test & 47 & 23 (48.9\%) & 24 (51.1\%) & 14 (29.8\%) & 1,739 & 37.0 \\
+\midrule
+Total & 188 & 102 (54.3\%) & 86 (45.7\%) & 55 (29.3\%) & 6,313 & 33.6 \\
+\bottomrule
+\end{tabular}
+\\[2pt]
+\footnotesize{$^*$Session 440 listed in AVEC2017 ($N=35$) is truncated on the server source and excluded, leaving $N=34$ intact dev sessions.}
+\end{table}

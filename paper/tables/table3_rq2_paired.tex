@@ -1,0 +1,17 @@
+\begin{table}[t]
+\centering
+\small
+\caption{RQ2 Confirmatory Paired Differences (\texttt{text\_plus\_timing} vs \texttt{text\_only} on Ridge)}
+\label{tab:rq2_paired}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Metric} & \textbf{Difference} & \textbf{95\% CI / SD} & \textbf{Test Procedure} & \textbf{Adjusted $p$} \\
+\midrule
+$\Delta$ RMSE & -0.003 & [-0.037, 0.031] & Participant bootstrap & $p_{\text{Holm}} = 1.000$ \\
+$\Delta$ AUROC & -0.0004 & [-0.0143, 0.0143] & Participant bootstrap & $p_{\text{Holm}} = 1.000$ \\
+$\Delta$ Conformal Width & -0.134 & $\pm 0.341$ (-1.03\%) & Nadeau-Bengio ($t=-0.758$) & $p = 0.452$ \\
+\bottomrule
+\end{tabular}
+\\[2pt]
+\footnotesize{Differences cross zero after Holm correction. Conformal width compression is not statistically significant under resampled $t$-test.}
+\end{table}

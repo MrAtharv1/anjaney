@@ -1,0 +1,20 @@
+\begin{table}[t]
+\centering
+\small
+\caption{Edge Device Inference Benchmark (\textbf{SIMULATED})}
+\label{tab:ondevice_benchmark}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Metric} & \textbf{ONNX FP32} & \textbf{ONNX INT8} & \textbf{Improvement} \\
+\midrule
+Model Size & 89.2 MB & \textbf{22.8 MB} & -74.4\% \\
+Peak RAM & 142.0 MB & \textbf{48.5 MB} & -65.8\% \\
+Median Turn Latency & 48.2 ms & \textbf{18.4 ms} & -61.8\% \\
+95th Pct Latency & 65.0 ms & \textbf{24.2 ms} & -62.8\% \\
+Throughput & 20.7 turns/s & \textbf{54.3 turns/s} & $+2.6\times$ \\
+Energy / Session & 0.12\% battery & \textbf{0.04\% battery} & -66.7\% \\
+\bottomrule
+\end{tabular}
+\\[2pt]
+\footnotesize{Clearly labelled \textbf{SIMULATED}. Evaluated on synthetic 10-turn student interaction sessions.}
+\end{table}

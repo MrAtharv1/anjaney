@@ -1,0 +1,17 @@
+\begin{table}[t]
+\centering
+\small
+\caption{Experimental Controls for Dataset Shortcuts and Confounders}
+\label{tab:shortcut_controls}
+\begin{tabular}{p{4.2cm}p{3.8cm}p{3.6cm}c}
+\toprule
+\textbf{Control Experiment} & \textbf{Observed Effect} & \textbf{Baseline / Null} & \textbf{Statistical $p$} \\
+\midrule
+Diagnosis Query Drop & AUROC $\Delta = -0.0801$ & Random drop: $-0.0200 \pm 0.0195$ & $p = 0.0000$ \\
+Session ID Predictor & AUROC $= 0.635$ [$0.532, 0.741$] & Uninformative: $0.500$ & $p < 0.05$ \\
+Text vs Session ID Corr. & Pearson $r = -0.295$ & Uncorrelated: $0.000$ & $p = 0.0004$ \\
+Cohort Stability ($\le 363$ vs $>363$) & AUROC $0.763$ vs $0.769$ & Discrepant performance & Stable \\
+ID-Residualized Text Prediction & Partial $r = 0.439$ & Null correlation: $0.000$ & $p = 5.36 \times 10^{-8}$ \\
+\bottomrule
+\end{tabular}
+\end{table}

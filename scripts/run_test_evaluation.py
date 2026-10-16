@@ -15,12 +15,16 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from scipy.stats import norm
-from sklearn.dummy import DummyRegressor
 from sklearn.linear_model import LogisticRegression, Ridge
-from sklearn.metrics import brier_score_loss, f1_score, mean_absolute_error, roc_auc_score, root_mean_squared_error
+from sklearn.metrics import (
+    brier_score_loss,
+    f1_score,
+    mean_absolute_error,
+    roc_auc_score,
+    root_mean_squared_error,
+)
 from sklearn.model_selection import StratifiedKFold
 
-from anjaney.conformal.split import SplitConformalRegressor
 from anjaney.features.registry import FeatureRegistry
 from anjaney.models.participant_agg import ParticipantAggregator
 from anjaney.utils.reproducibility import get_git_hash
@@ -117,7 +121,7 @@ def run_single_test_evaluation(
         )
 
     git_hash = get_git_hash()
-    timestamp_start = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    timestamp_start = datetime.datetime.now(datetime.UTC).isoformat()
 
     # Write initial lock entry FIRST
     initial_lock = {
@@ -133,7 +137,7 @@ def run_single_test_evaluation(
     try:
         # Load data
         df_feat = pd.read_parquet(features_path)
-        with open(splits_path, "r", encoding="utf-8") as f:
+        with open(splits_path, encoding="utf-8") as f:
             splits_data = json.load(f)
 
         train_pids = sorted(list(splits_data["official"]["train"]))
@@ -386,7 +390,7 @@ def run_single_test_evaluation(
         # -------------------------------------------------------------
         # Compile Master Results JSON
         # -------------------------------------------------------------
-        timestamp_end = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        timestamp_end = datetime.datetime.now(datetime.UTC).isoformat()
         results = {
             "status": "COMPLETED",
             "protocol": "prereg-v2",
@@ -448,7 +452,7 @@ def run_single_test_evaluation(
         error_lock = {
             "status": "FAILED",
             "git_hash": git_hash,
-            "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
             "error": str(e),
         }
         with open(lock_file, "w", encoding="utf-8") as f:
