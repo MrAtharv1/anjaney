@@ -7,7 +7,7 @@
 [![License: Research Prototype](https://img.shields.io/badge/license-Research%20Prototype-green.svg)](LICENSE)
 [![DPDP Act 2023 Aligned](https://img.shields.io/badge/privacy-DPDP%20Aligned-emerald.svg)](docs/PRIVACY_DPDP.md)
 
-ANJANEY is a B.Tech final-year research prototype designed to support university counseling cells with calibrated, privacy-first mental health triage. It addresses three known failure modes in text-based depression screening: conversational shortcut learning, population-level baseline confounding, and overconfident point predictions near diagnostic cutoffs.
+ANJANEY is a B.Tech final-year research prototype designed to support university counseling cells with calibrated, privacy-first mental health triage. It addresses three known failure modes in text-based depression screening: conversational shortcut learning, population-level baseline confounding, and overconfident point predictions near clinical triage thresholds.
 
 > ⚠️ **CLINICAL DISCLAIMER**: ANJANEY is a **screening aid and triage prioritization tool**, never a diagnostic instrument. It outputs uncertainty intervals and risk trends, not clinical diagnoses. Deterministic crisis safeguards operate completely outside the ML model.
 

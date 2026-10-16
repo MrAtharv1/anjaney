@@ -61,9 +61,22 @@ class ParticipantAggregator:
     def fit_transform_fold(
         self, X_train: pd.DataFrame, X_val: pd.DataFrame
     ) -> tuple[np.ndarray, np.ndarray]:
-        """Fit scaler and PCA inside the training fold and transform validation fold."""
-        X_tr_clean = np.nan_to_num(X_train.values, nan=0.0)
-        X_val_clean = np.nan_to_num(X_val.values, nan=0.0)
+        """Fit in-fold median imputer, scaler, and PCA strictly on training fold and transform validation fold."""
+        train_vals = X_train.values.astype(float).copy()
+        val_vals = X_val.values.astype(float).copy()
+
+        # In-fold median imputation strictly derived from training partition
+        train_medians = np.nanmedian(train_vals, axis=0)
+        train_medians = np.nan_to_num(train_medians, nan=0.0)
+
+        inds_tr = np.where(np.isnan(train_vals))
+        train_vals[inds_tr] = np.take(train_medians, inds_tr[1])
+
+        inds_val = np.where(np.isnan(val_vals))
+        val_vals[inds_val] = np.take(train_medians, inds_val[1])
+
+        X_tr_clean = np.nan_to_num(train_vals, nan=0.0)
+        X_val_clean = np.nan_to_num(val_vals, nan=0.0)
 
         self.scaler = StandardScaler()
         X_tr_scaled = self.scaler.fit_transform(X_tr_clean)

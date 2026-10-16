@@ -21,6 +21,6 @@ repos:
     hooks:
       - id: reject-protected-data
         name: Data Privacy Guard (AGENTS.md Rule 1)
-        entry: bash -c 'for f in "$@"; do if [[ "$f" =~ ^data/(raw|interim|processed)/ ]]; then echo "ERROR: EULA Violation. Committing data under $f is strictly prohibited."; exit 1; fi; done' --
+        entry: bash -c 'for f in "$@"; do if [[ "$f" =~ ^data/(raw|interim|processed|daic_woz)/ ]]; then echo "ERROR: EULA Violation. Committing data under $f is strictly prohibited."; exit 1; fi; done' --
         language: system
         types: [file]

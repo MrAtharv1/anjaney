@@ -157,3 +157,26 @@ def test_acoustic_feature_extractor_vuv_and_scrub_masking():
     for c in AcousticFeatureExtractor.FEATURE_COLUMNS:
         assert c in cols["acoustic"]
         assert c in df_extracted.columns
+
+
+def test_acoustics_offline_only_never_in_bundle():
+    """Verify acoustic features are strictly offline-only and never leaked to bundle.json or apps/web."""
+    import json
+    from pathlib import Path
+
+    bundle_path = Path("data/processed/bundle/bundle.json")
+    if bundle_path.exists():
+        with open(bundle_path, encoding="utf-8") as f:
+            bundle_data = json.load(f)
+        feature_names = bundle_data.get("feature_names", [])
+        acoustic_in_bundle = [f for f in feature_names if "acoustic" in f]
+        assert len(acoustic_in_bundle) == 0, (
+            f"Found acoustic features in bundle.json: {acoustic_in_bundle}"
+        )
+
+    # Also verify apps/web contains zero references to acoustic feature extraction
+    web_dir = Path("apps/web")
+    if web_dir.exists():
+        for file in web_dir.rglob("*.ts*"):
+            text = file.read_text(encoding="utf-8", errors="ignore")
+            assert "acoustic_" not in text, f"Found acoustic feature reference in web code: {file}"

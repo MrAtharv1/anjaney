@@ -28,12 +28,8 @@ from anjaney.features.acoustic import compute_window_acoustics
 from anjaney.preprocess.cleaner import TAG_PATTERN
 
 BASE_URL = "https://dcapswoz.ict.usc.edu/wwwdaicwoz/"
-BROWSER_HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-        "(KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
-    ),
-    "Referer": "https://dcapswoz.ict.usc.edu/wwwdaicwoz/",
+# No header spoofing: use standard non-spoofed headers with default User-Agent
+DEFAULT_HEADERS = {
     "Accept": "*/*",
 }
 
@@ -94,9 +90,9 @@ def get_session_acoustic_arrays(pid: str) -> tuple[np.ndarray | None, np.ndarray
     password = os.environ.get("DAIC_PASS", "").strip()
     auth = (user, password) if user and password else None
 
-    for attempt in range(3):
+    for attempt in range(4):
         try:
-            with RemoteZip(zip_url, auth=auth, headers=BROWSER_HEADERS, timeout=30) as rz:
+            with RemoteZip(zip_url, auth=auth, headers=DEFAULT_HEADERS, timeout=30) as rz:
                 cov_entry = next(
                     (m for m in rz.namelist() if m.upper().endswith(f"{pid}_COVAREP.CSV")), None
                 )
@@ -112,8 +108,20 @@ def get_session_acoustic_arrays(pid: str) -> tuple[np.ndarray | None, np.ndarray
                 form = pd.read_csv(io.BytesIO(form_bytes), header=None).values
                 return cov, form
         except Exception as exc:
-            if attempt == 2:
-                print(f"[RemoteZip Error] PID {pid} failed after 3 attempts: {exc}")
+            status_code = getattr(getattr(exc, "response", None), "status_code", None)
+            err_str = str(exc).lower()
+            if status_code == 403 or "403" in err_str or "forbidden" in err_str:
+                print(f"[RemoteZip Fatal] HTTP 403 Forbidden for PID {pid}. Halting extraction.")
+                raise RuntimeError(f"HTTP 403 Forbidden on {zip_url}") from exc
+            if status_code == 429 or "429" in err_str or "too many requests" in err_str:
+                backoff = 5.0 * (attempt + 1)
+                print(
+                    f"[RemoteZip RateLimit] HTTP 429 for PID {pid}. Backing off {backoff:.1f}s..."
+                )
+                time.sleep(backoff)
+                continue
+            if attempt == 3:
+                print(f"[RemoteZip Error] PID {pid} failed after retries: {exc}")
                 return None, None
             time.sleep(1.5 * (attempt + 1))
 
@@ -191,10 +199,10 @@ def main():
     print(f"{len(already_done)}/{len(pids)} sessions already have acoustic parquets.")
 
     remaining = [pid for pid in pids if pid not in already_done]
-    print(f"Extracting acoustics for {len(remaining)} remaining sessions with 8 workers...")
+    print(f"Extracting acoustics for {len(remaining)} remaining sessions with 2 workers...")
 
     success_count = len(already_done)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
         future_to_pid = {
             executor.submit(process_session, pid, data_root, sessions_map[pid]): pid
             for pid in remaining

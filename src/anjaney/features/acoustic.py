@@ -1,4 +1,4 @@
-"""Acoustic and voice biomarker feature extractor (Tier 2 opt-in modality).
+"""Acoustic and voice biomarker feature extractor (acoustic extension, exploratory modality).
 
 Extracts 16 window-level acoustic features from DAIC-WOZ pre-extracted COVAREP and FORMANT
 files in compliance with AVEC2017 specifications:
@@ -179,9 +179,6 @@ class AcousticFeatureExtractor:
             for col in self.FEATURE_COLUMNS:
                 if col not in df_res.columns:
                     df_res[col] = np.nan
-                valid_med = df_res[col].dropna().median()
-                fill_val = float(valid_med) if pd.notna(valid_med) else 0.0
-                df_res[col] = df_res[col].fillna(fill_val)
 
             out_df = df_res[self.FEATURE_COLUMNS].copy()
             out_df.index = df_windows.index

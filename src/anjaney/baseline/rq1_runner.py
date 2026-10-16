@@ -143,6 +143,7 @@ def _fit_mixed_effects_with_fallback(valid_post_warmup: pd.DataFrame) -> dict[st
             return {
                 "converged": True,
                 "model_used": "mixedlm_random_intercept_and_slope",
+                "mixed_model_fallback_flag": False,
                 "interaction_coef": float(fit_res.params.get(inter_key, np.nan)),
                 "interaction_p": float(fit_res.pvalues.get(inter_key, np.nan)),
                 "interaction_ci_95": [
@@ -165,6 +166,7 @@ def _fit_mixed_effects_with_fallback(valid_post_warmup: pd.DataFrame) -> dict[st
         return {
             "converged": True,
             "model_used": "fallback_cluster_robust_se_by_participant",
+            "mixed_model_fallback_flag": True,
             "interaction_coef": float(ols_mod.params.get(inter_key, np.nan)),
             "interaction_p": float(ols_mod.pvalues.get(inter_key, np.nan)),
             "interaction_ci_95": [
@@ -178,6 +180,7 @@ def _fit_mixed_effects_with_fallback(valid_post_warmup: pd.DataFrame) -> dict[st
         return {
             "converged": False,
             "model_used": "failed",
+            "mixed_model_fallback_flag": True,
             "error": str(exc),
             "interaction_coef": None,
             "interaction_p": None,
@@ -433,26 +436,21 @@ def run_rq1_analysis(
     # 5. Mixed-Effects Model with automatic fallback to participant cluster-robust SEs
     mixed_summary = _fit_mixed_effects_with_fallback(valid_post_warmup)
 
-    # 6. Exploratory Warm-up K Sensitivity (K in [3, 5, 8])
+    # 6. Exploratory Warm-up K Sensitivity (K in [3, 5, 8]) on one FIXED cohort
     k_grid = params.get("warmup_k_sensitivity_grid", [3, 5, 8])
-    k_sensitivity: dict[str, Any] = {}
+    max_k = max(int(k) for k in k_grid)
+    participant_window_counts = df_features.groupby("participant_id").size()
+    fixed_cohort_pids = set(participant_window_counts[participant_window_counts > max_k].index)
+    df_features_fixed = df_features[df_features["participant_id"].isin(fixed_cohort_pids)].copy()
+
+    k_sensitivity: dict[str, Any] = {
+        "fixed_cohort_size": len(fixed_cohort_pids),
+        "fixed_cohort_min_windows": max_k + 1,
+    }
     for k_cand in k_grid:
-        eligible_train = sum(
-            len(g) > int(k_cand)
-            for _, g in df_features[df_features["official_split"] == "train"].groupby(
-                "participant_id"
-            )
-        )
-        if eligible_train < 2:
-            k_sensitivity[f"K_{k_cand}"] = {
-                "status": "INSUFFICIENT_DATA",
-                "eligible_train_participants": int(eligible_train),
-                "label": "PRIMARY" if int(k_cand) == warmup_k else "EXPLORATORY",
-            }
-            continue
         try:
             k_meta, _ = _evaluate_for_warmup_k(
-                df_features,
+                df_features_fixed,
                 embed_cols,
                 timing_cols,
                 params,
@@ -484,13 +482,28 @@ def run_rq1_analysis(
         "is_real_data_gate": data_source == "daic",
         "downgraded_by_length_confound": downgraded_by_length_confound,
         "conditioning_mode": primary_meta["conditioning_mode"],
+        "rules_hash": prereg_meta["prereg_sha256"],
         "prereg_hash": prereg_meta["prereg_sha256"],
         "prereg_commit": prereg_meta["prereg_commit"],
         "git_hash": prereg_meta["repo_git_hash"],
         "code_dirty": prereg_meta["code_dirty"],
+        "n_per_group": {
+            "high_risk": n_high,
+            "low_risk": n_low,
+        },
         "sample_counts": {
             "n_high_risk_analyzed": n_high,
             "n_low_risk_analyzed": n_low,
+            "n_excluded_no_interviewer_turns": len(no_ellie_pids),
+            "excluded_no_interviewer_pids": no_ellie_pids,
+            "n_excluded_short_high_risk": len(primary_meta["excluded_high_pids"]),
+            "n_excluded_short_low_risk": len(primary_meta["excluded_low_pids"]),
+            "excluded_high_risk_pids": primary_meta["excluded_high_pids"],
+            "excluded_low_risk_pids": primary_meta["excluded_low_pids"],
+            "n_missing_modality_windows_dropped": primary_meta["missing_modality_window_drops"],
+            "n_test_split_held_out": test_count_excluded,
+        },
+        "exclusions": {
             "n_excluded_no_interviewer_turns": len(no_ellie_pids),
             "excluded_no_interviewer_pids": no_ellie_pids,
             "n_excluded_short_high_risk": len(primary_meta["excluded_high_pids"]),
@@ -513,6 +526,7 @@ def run_rq1_analysis(
             "minimum_detectable_effect_d_80pct_power": mde_d_80,
             "permutation_p_value": p_value,
             "length_residualized_sensitivity_cohens_d": length_adj_d,
+            "mixed_model_fallback_flag": mixed_summary.get("mixed_model_fallback_flag", False),
             "mixed_effects": mixed_summary,
             "exploratory_warmup_k_sensitivity": k_sensitivity,
         },

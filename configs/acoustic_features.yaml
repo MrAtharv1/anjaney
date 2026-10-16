@@ -1,0 +1,31 @@
+# Acoustic Feature Configuration
+# Modality: Exploratory Extension (Offline-Only AVEC2017 Benchmark)
+# Protocol Disclosure: Feature list frozen in code at commit d55c76e, not pre-registered.
+
+sampling_rate_hz: 100
+frame_step_s: 0.01
+source_files:
+  - '{participant_id}_COVAREP.csv'
+  - '{participant_id}_FORMANT.csv'
+
+feature_columns:
+  - acoustic_f0_mean
+  - acoustic_f0_std
+  - acoustic_f0_iqr
+  - acoustic_voiced_fraction
+  - acoustic_naq_mean
+  - acoustic_naq_std
+  - acoustic_qoq_mean
+  - acoustic_h1h2_mean
+  - acoustic_psp_mean
+  - acoustic_mdq_mean
+  - acoustic_peak_slope_mean
+  - acoustic_rd_mean
+  - acoustic_f1_mean
+  - acoustic_f2_mean
+  - acoustic_f1_std
+  - acoustic_mcep0_std
+
+imputation:
+  strategy: in_fold_training_median
+  dataset_wide_imputation: false

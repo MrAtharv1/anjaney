@@ -1,0 +1,57 @@
+# ANJANEY Pre-declared Final Model Configuration (prereg-v2)
+# Date: 2026-10-16
+# Status: FROZEN
+
+metadata:
+  study_title: "ANJANEY: Student Check-In Screening Aid and Queue Prioritization"
+  version: "prereg-v2"
+  protocol_amendment: "Amendment 2 (docs/AMENDMENTS.md)"
+  date: "2026-10-16"
+
+deployed_model:
+  modality: "text_only"
+  head: "ridge"
+  model_parameters:
+    alpha: 10.0
+    solver: "auto"
+    random_state: 42
+  feature_pipeline:
+    embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
+    embedding_dimension: 384
+    window_turn_size: 5
+    aggregation: "ParticipantAggregator"
+    n_pca_components: 20
+    standardize_in_fold: true
+    missing_imputation: "training_fold_median_only"
+
+scientific_rationale:
+  model_selection: "Parsimonious unimodal text_only Ridge selected because RQ1 is INCONCLUSIVE (permutation p = 0.0461, Cohen's d = 0.314) and RQ2 confirmatory paired multimodal ablation showed zero statistically significant reduction in prediction error (Delta RMSE = -0.003, p_Holm = 1.000; Delta AUROC = -0.0004, p_Holm = 1.000) and clinically negligible interval width change (-1.03%, Nadeau-Bengio p = 0.452)."
+  exploratory_modalities:
+    timing: "Exploratory offline only. Not deployed in production risk score; unvalidated on typing cadence."
+    acoustic: "Exploratory offline benchmark only. Pre-extracted voice features (COVAREP/formants) are never extracted or loaded on student check-in clients."
+
+operating_points:
+  selection_scope: "Frozen strictly on validation folds (repeat 0, N=141) prior to test split evaluation."
+  clinical_target_threshold: 10.0
+  regression_conformal:
+    primary_alpha: 0.10
+    high_throughput_alpha: 0.20
+    max_interval_width: 8.0
+    decision_margin: 0.5
+  classification_conformal:
+    method: "lac"
+    recommended_alpha: 0.20
+    nominal_coverage: 0.80
+  cost_regimes:
+    standard_clinical:
+      c_fn: 5.0
+      c_fp: 1.0
+      c_abstain: 0.5
+      frozen_w_max: 10.0
+      frozen_margin: 0.0
+
+test_evaluation_protocol:
+  n_test_sessions: 47
+  test_lock_path: "experiments/test_eval.lock"
+  evaluation_policy: "EXACTLY_ONE_TEST_RUN"
+  post_unlock_modifications_allowed: false
